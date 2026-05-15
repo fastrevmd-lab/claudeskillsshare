@@ -14,6 +14,7 @@ A collection of Claude Code / Hermes skills for parsing, auditing, converting, a
 | [srx-mpls-in-flow](skills/srx-mpls-in-flow/) | Juniper SRX / Junos MPLS L3VPN in flow mode | `MPLS in Flow`, `family mpls mode packet-based`, `inet-vpn`, `vrf-table-label`, `VRF-to-zone` |
 | [srx-mnha](skills/srx-mnha/) | Juniper SRX / Junos Multi-Node High Availability | `MNHA`, `Multi-Node High Availability`, `chassis high-availability`, `SRG`, `ICL`, `ICD` |
 | [srx-nat](skills/srx-nat/) | Juniper SRX / Junos NAT | `source nat`, `destination nat`, `static nat`, `NAT64`, `CGN`, `PBA`, `hairpin`, `proxy-arp` |
+| [srx-policy](skills/srx-policy/) | Juniper SRX / Junos security policy | `security policies global`, `from-zone`, `to-zone`, `AppFW`, `AppID`, `web-filtering`, `SecIntel`, `ATP` |
 
 The four `parsing-*` skills parse vendor-specific configs into a **common vendor-neutral intermediate JSON schema**, enabling cross-vendor comparison, conversion, and unified auditing.
 
@@ -47,6 +48,9 @@ cp -r claudeskillsshare/skills/srx-mpls-in-flow ~/.claude/skills/
 
 # Example: install only the SRX NAT skill
 cp -r claudeskillsshare/skills/srx-nat ~/.claude/skills/
+
+# Example: install only the SRX Policy skill
+cp -r claudeskillsshare/skills/srx-policy ~/.claude/skills/
 ```
 
 ### Verify installation
@@ -87,15 +91,24 @@ After copying, your `~/.claude/skills/` directory should look like:
 │       ├── source-multi-node-high-availability-basics.md
 │       ├── source-hybrid-mnha-with-ebgp.md
 │       └── source-srx-from-chassis-cluster-to-mnha.md
-└── srx-nat/
+├── srx-nat/
+│   ├── SKILL.md
+│   └── references/
+│       ├── source-index.md
+│       ├── source-dns64-and-nat64-on-srx-series.md
+│       ├── source-srx4600-cgn-configuration-breakdown.md
+│       ├── source-security-nat-overview.md
+│       ├── source-troubleshoot-source-nat.md
+│       └── source-troubleshoot-destination-nat.md
+└── srx-policy/
     ├── SKILL.md
     └── references/
         ├── source-index.md
-        ├── source-dns64-and-nat64-on-srx-series.md
-        ├── source-srx4600-cgn-configuration-breakdown.md
-        ├── source-security-nat-overview.md
-        ├── source-troubleshoot-source-nat.md
-        └── source-troubleshoot-destination-nat.md
+        ├── source-configuring-security-policies-junos-os.md
+        ├── source-security-global-policies.md
+        ├── source-security-policy-applications-and-application-sets-junos-os.md
+        ├── source-juniper-srx-enhanced-web-filtering-configuration.md
+        └── source-secintel-feeds-overview-and-benefits.md
 ```
 
 Restart Claude Code after installing. The skills will auto-trigger when they detect vendor-specific keywords or SRX operational topics in your messages or pasted configs.
@@ -111,8 +124,9 @@ cp -r claudeskillsshare/skills/srx-dynamic-ip-feed ~/.hermes/skills/devops/
 cp -r claudeskillsshare/skills/srx-mpls-in-flow ~/.hermes/skills/devops/
 cp -r claudeskillsshare/skills/srx-mnha ~/.hermes/skills/devops/
 cp -r claudeskillsshare/skills/srx-nat ~/.hermes/skills/devops/
+cp -r claudeskillsshare/skills/srx-policy ~/.hermes/skills/devops/
 
-hermes skills list | grep -E 'parsing-|srx-dynamic-ip-feed|srx-mpls-in-flow|srx-mnha|srx-nat'
+hermes skills list | grep -E 'parsing-|srx-dynamic-ip-feed|srx-mpls-in-flow|srx-mnha|srx-nat|srx-policy'
 ```
 
 ## Usage
@@ -134,6 +148,7 @@ Use slash commands to explicitly invoke a skill:
 /srx-mpls-in-flow
 /srx-mnha
 /srx-nat
+/srx-policy
 ```
 
 ### What you can do
@@ -147,6 +162,7 @@ Use slash commands to explicitly invoke a skill:
 - **Design SRX MPLS in flow mode** — Configure SRX MPLS L3VPN while keeping inet/inet6 traffic in stateful flow mode for policy, NAT, and AppID
 - **Design SRX MNHA** — Reason about MNHA modes, SRGs, ICL/ICD, eBGP/BFD failover, VIPs, and DHCP caveats
 - **Operate SRX NAT** — Configure and troubleshoot source NAT, destination NAT, static NAT, NAT64/DNS64, CGN/PBA, persistent NAT, hairpin NAT, and proxy ARP
+- **Design SRX security policy** — Prefer `security policies global` for greenfield and vendor migrations, then layer AppID/AppFW, web filtering, SecIntel, and ATP controls
 
 ### Examples
 
@@ -177,6 +193,9 @@ Use slash commands to explicitly invoke a skill:
 
 # SRX NAT troubleshooting
 "Help me troubleshoot this SRX destination NAT rule: hits increment, but the policy denies the translated web server session"
+
+# SRX global policy migration
+"Convert this vendor rulebase into an SRX 23.x global security policy design with AppFW, web filtering, SecIntel, logging, and a final deny"
 ```
 
 ## Tips
@@ -191,6 +210,7 @@ Use slash commands to explicitly invoke a skill:
   - **SRX MPLS in Flow**: collect `show security flow status`, `show route table bgp.l3vpn.0`, `show route table <vrf>.inet.0`, `show ldp neighbor`, `show mpls interface`, `show security flow session extensive`, and `show security policies hit-count`
   - **SRX MNHA**: collect `show chassis high-availability information`, `show chassis high-availability services-redundancy-group <id>`, `show security flow session`, `show bgp summary`, and `show bfd session`
   - **SRX NAT**: collect `show configuration security nat | display set`, `show security nat source rule all`, `show security nat destination rule all`, `show security nat static rule all`, `show security nat source pool all`, `show security nat proxy-arp`, and `show security flow session ... extensive`
+  - **SRX security policy**: collect `show configuration security policies | display set`, `show configuration security policies global | display set`, `show security policies hit-count global`, `show security application-firewall rule-set <name>`, `show security utm web-filtering status`, and `show security flow session ... extensive`
 - For large configs, save to a file and point Claude at the file path
 
 ## Conversion Caveats
@@ -312,6 +332,44 @@ skills/srx-nat/references/source-srx4600-cgn-configuration-breakdown.md
 skills/srx-nat/references/source-security-nat-overview.md
 skills/srx-nat/references/source-troubleshoot-source-nat.md
 skills/srx-nat/references/source-troubleshoot-destination-nat.md
+```
+
+### srx-policy
+
+`srx-policy` is an SRX security policy design, migration, and troubleshooting playbook for Junos 23.x+ non-Branch SRX platforms. It strongly recommends `security policies global` for greenfield deployments and migrations from other firewall vendors, using zone-to-zone policy mainly for legacy compatibility or tightly scoped exceptions.
+
+Use it for:
+
+- deciding between `security policies global` and legacy `from-zone ... to-zone ...` policy contexts
+- converting vendor rulebases into ordered SRX global policies with `match from-zone` and `match to-zone`
+- global address-book and application/application-set design
+- AppID / Application Firewall rule-sets and policy attachment
+- enhanced web filtering / UTM profile attachment and verification
+- SecIntel and ATP placement relative to deterministic base policy
+- policy logging, counts, final deny, session verification, and commit safety
+- troubleshooting policy hit-counts, AppFW counters, web-filtering counters, and flow sessions
+
+Key verification commands:
+
+```text
+show configuration security policies global | display set
+show security policies hit-count global
+show security flow session source-prefix <source> extensive
+show security application-firewall rule-set <rule-set-name>
+show security utm web-filtering status
+show security utm web-filtering statistics
+```
+
+Reference files:
+
+```text
+skills/srx-policy/SKILL.md
+skills/srx-policy/references/source-index.md
+skills/srx-policy/references/source-configuring-security-policies-junos-os.md
+skills/srx-policy/references/source-security-global-policies.md
+skills/srx-policy/references/source-security-policy-applications-and-application-sets-junos-os.md
+skills/srx-policy/references/source-juniper-srx-enhanced-web-filtering-configuration.md
+skills/srx-policy/references/source-secintel-feeds-overview-and-benefits.md
 ```
 
 ### srx-mnha
@@ -461,9 +519,11 @@ rm -rf ~/.claude/skills/srx-dynamic-ip-feed
 rm -rf ~/.claude/skills/srx-mpls-in-flow
 rm -rf ~/.claude/skills/srx-mnha
 rm -rf ~/.claude/skills/srx-nat
+rm -rf ~/.claude/skills/srx-policy
 
 rm -rf ~/.hermes/skills/devops/srx-dynamic-ip-feed
 rm -rf ~/.hermes/skills/devops/srx-mpls-in-flow
 rm -rf ~/.hermes/skills/devops/srx-mnha
 rm -rf ~/.hermes/skills/devops/srx-nat
+rm -rf ~/.hermes/skills/devops/srx-policy
 ```
