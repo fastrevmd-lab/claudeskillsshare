@@ -1,16 +1,51 @@
 ---
 name: parsing-palo-configs
-description: >
-  Parse and analyze Palo Alto PAN-OS firewall configurations in XML format. Use this skill
-  when the user pastes, uploads, or references a PAN-OS or Panorama configuration export.
-  Trigger on keywords: PAN-OS, Palo Alto, Panorama, NGFW, "vsys", "security rulebase",
-  "address-group", "application-default", "security-profile-group", "device-group",
-  "<entry name=", "<member>", "tag-based", "User-ID". Also trigger when the user asks to
-  convert, audit, summarize, or explain a Palo Alto config.
+description: 'Parse and analyze Palo Alto PAN-OS firewall configurations in XML format. Use this skill when the user pastes, uploads, or references a PAN-OS or Panorama configuration export. Trigger on keywords: PAN-OS, Palo Alto, Panorama, NGFW, "vsys", "security rulebase", "address-group", "application-default", "security-profile-group", "device-group", "<entry name=", "<member>", "tag-based", "User-ID". Also trigger when the user asks to convert, audit, summarize, or explain a Palo Alto config.
+
+  '
 version: 1.1.0
+author: Hermes Agent
+license: MIT
+metadata:
+  hermes:
+    tags:
+    - firewall
+    - config-parsing
+    - palo-alto
+    - pan-os
+    - panorama
+    - xml
+    - vsys
+    - device-group
+    - rulebase
+    - nat
+    - appid
+    - migration
+    - audit
+    related_skills:
+    - parsing-srx-configs
+    - parsing-fortinet-configs
+    - parsing-cisco-configs
 ---
 
 # Parsing Palo Alto PAN-OS Configurations
+
+## Overview
+
+Use this skill to parse Palo Alto PAN-OS firewall or Panorama configuration exports into the shared vendor-neutral firewall intermediate schema. It primarily targets XML exports and also covers flat `set`-style output when available, including vsys, device-groups, shared objects, zones, address/service/application objects, security rules, NAT rules, routes, profiles, tags, User-ID references, and system settings.
+
+Panorama inheritance and rulebase placement are critical. Preserve shared/device-group/vsys context, distinguish pre-rules and post-rules, and record unresolved inherited references rather than flattening them silently.
+
+## When to Use
+
+Use this skill when:
+
+- the user pastes or references PAN-OS, Palo Alto, Panorama, XML export, or `show config` output
+- the task is to parse, audit, summarize, compare, or convert a PAN-OS/Panorama configuration
+- the config contains `vsys`, `device-group`, `security rulebase`, `address-group`, `application-default`, `<entry name=`, or `<member>`
+- you need vendor-neutral JSON before migration to SRX, FortiGate, ASA/FTD, or another platform
+
+Do not use this skill as a substitute for device-specific validation. When the parse result will drive production changes, verify against current vendor documentation and live device output where available.
 
 You are an expert at parsing Palo Alto PAN-OS firewall configurations in XML format.
 When given raw PAN-OS XML config, extract all components into a structured
@@ -339,3 +374,21 @@ After extraction, run these checks and report findings:
 - `references/config-format.md` — PAN-OS XML structure reference
 - `references/intermediate-schema.md` — Output schema specification
 - `references/parsing-patterns.md` — Edge cases, app mapping, profile resolution
+
+## Common Pitfalls
+
+1. Do not collapse Panorama shared, device-group, and vsys scopes without preserving source context.
+2. Preserve pre-rulebase vs post-rulebase order; rule placement changes behavior.
+3. `application-default` is not a normal service object. Represent it explicitly and warn during cross-vendor conversion.
+4. Application, service, URL category, tag, and profile references can look similar; resolve each against the correct object tree.
+5. Disabled rules, negation, User-ID fields, and dynamic address groups are easy to lose; capture them explicitly or warn.
+
+## Verification Checklist
+
+- [ ] Input vendor/platform and config format were detected correctly
+- [ ] All major object counts are reported: zones, interfaces, addresses, services/applications, policies, NAT, routes, VPN, HA, and system settings
+- [ ] Output conforms to `references/intermediate-schema.md`
+- [ ] Disabled/inactive rules and objects are preserved with explicit state
+- [ ] Unresolved references, unsupported blocks, and parser assumptions are listed in `metadata.warnings` and/or `residual_raw`
+- [ ] Rule order and NAT order are preserved with `_rule_index` or equivalent ordering metadata
+- [ ] Cross-vendor conversion caveats are called out before suggesting target-platform config

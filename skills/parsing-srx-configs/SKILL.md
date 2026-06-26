@@ -1,17 +1,51 @@
 ---
 name: parsing-srx-configs
-description: >
-  Parse and analyze Juniper SRX / Junos firewall configurations. Use this skill when the user
-  pastes, uploads, or references an SRX configuration — either in "set" command format
-  (show configuration | display set) or hierarchical curly-brace format (show configuration).
-  Trigger on keywords: SRX, Junos, Juniper, "set security", "security zones", "address-book",
-  "applications", "security policies", "from-zone", "to-zone", "nat rule-set", "chassis cluster",
-  "logical-systems", "routing-instances". Also trigger when the user asks to convert, audit,
-  summarize, or explain an SRX config.
+description: 'Parse and analyze Juniper SRX / Junos firewall configurations. Use this skill when the user pastes, uploads, or references an SRX configuration — either in "set" command format (show configuration | display set) or hierarchical curly-brace format (show configuration). Trigger on keywords: SRX, Junos, Juniper, "set security", "security zones", "address-book", "applications", "security policies", "from-zone", "to-zone", "nat rule-set", "chassis cluster", "logical-systems", "routing-instances". Also trigger when the user asks to convert, audit, summarize, or explain an SRX config.
+
+  '
 version: 1.1.0
+author: Hermes Agent
+license: MIT
+metadata:
+  hermes:
+    tags:
+    - firewall
+    - config-parsing
+    - juniper
+    - srx
+    - junos
+    - security-policy
+    - nat
+    - zones
+    - address-book
+    - migration
+    - audit
+    related_skills:
+    - srx-policy
+    - srx-nat
+    - srx-mnha
+    - srx-mpls-in-flow
+    - srx-dynamic-ip-feed
 ---
 
 # Parsing Juniper SRX Configurations
+
+## Overview
+
+Use this skill to parse Juniper SRX / Junos firewall configurations into the shared vendor-neutral firewall intermediate schema. It supports both `show configuration | display set` lines and hierarchical curly-brace configuration, including zones, address books, applications, security policies, NAT, logical-systems, routing-instances, interfaces, routing protocols, VPN, chassis cluster, and system settings.
+
+For design interpretation after extraction, load the adjacent SRX operational skill that matches the topic: `srx-policy`, `srx-nat`, `srx-mnha`, `srx-mpls-in-flow`, or `srx-dynamic-ip-feed`.
+
+## When to Use
+
+Use this skill when:
+
+- the user pastes or references SRX, Junos, Juniper, `show configuration`, or `display set` output
+- the task is to parse, audit, summarize, compare, or convert an SRX configuration
+- the config contains `set security`, `security zones`, `address-book`, `security policies`, `from-zone`, `to-zone`, `nat rule-set`, `logical-systems`, or `routing-instances`
+- you need vendor-neutral JSON before cross-vendor migration or deeper SRX-specific interpretation
+
+Do not use this skill as a substitute for device-specific validation. When the parse result will drive production changes, verify against current vendor documentation and live device output where available.
 
 You are an expert at parsing Juniper SRX / Junos firewall configurations. When given raw SRX
 config text, extract all components into a structured intermediate format.
@@ -320,3 +354,21 @@ After extraction, run these checks and report findings:
 - `references/config-format.md` — Detailed SRX config syntax reference
 - `references/intermediate-schema.md` — Output schema specification
 - `references/parsing-patterns.md` — Edge cases, predefined apps, and name sanitization
+
+## Common Pitfalls
+
+1. Do not skip hierarchical-to-set normalization; inactive prefixes, bracket lists, and quoted strings affect extraction.
+2. Zone-local address books are valid in older designs; migrate or normalize to global only with a warning.
+3. Logical-systems and routing-instances are separate contexts; preserve them instead of merging names blindly.
+4. Policy matching can depend on NAT order and translated addresses; load `srx-nat` for interpretation.
+5. Management, cluster, reth, fab, and HA interfaces need special handling and should not be naively treated as ordinary security-zone interfaces.
+
+## Verification Checklist
+
+- [ ] Input vendor/platform and config format were detected correctly
+- [ ] All major object counts are reported: zones, interfaces, addresses, services/applications, policies, NAT, routes, VPN, HA, and system settings
+- [ ] Output conforms to `references/intermediate-schema.md`
+- [ ] Disabled/inactive rules and objects are preserved with explicit state
+- [ ] Unresolved references, unsupported blocks, and parser assumptions are listed in `metadata.warnings` and/or `residual_raw`
+- [ ] Rule order and NAT order are preserved with `_rule_index` or equivalent ordering metadata
+- [ ] Cross-vendor conversion caveats are called out before suggesting target-platform config

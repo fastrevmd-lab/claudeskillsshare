@@ -1,18 +1,50 @@
 ---
 name: parsing-fortinet-configs
-description: >
-  Parse and analyze Fortinet FortiGate / FortiOS firewall configurations. Use this skill
-  when the user pastes, uploads, or references a FortiGate config — the "config/edit/set/next/end"
-  block format from "show full-configuration" or backup exports. Trigger on keywords: FortiGate,
-  FortiOS, Fortinet, VDOM, "config firewall policy", "config firewall address",
-  "config firewall service custom", "config system interface", "edit", "set srcintf",
-  "set dstintf", "set srcaddr", "set dstaddr", "set action accept", "set utm-status enable",
-  "set av-profile", "set webfilter-profile", "set ips-sensor". Also trigger when the user asks
-  to convert, audit, summarize, or explain a FortiGate config.
+description: 'Parse and analyze Fortinet FortiGate / FortiOS firewall configurations. Use this skill when the user pastes, uploads, or references a FortiGate config — the "config/edit/set/next/end" block format from "show full-configuration" or backup exports. Trigger on keywords: FortiGate, FortiOS, Fortinet, VDOM, "config firewall policy", "config firewall address", "config firewall service custom", "config system interface", "edit", "set srcintf", "set dstintf", "set srcaddr", "set dstaddr", "set action accept", "set utm-status enable", "set av-profile", "set webfilter-profile", "set ips-sensor". Also trigger when the user asks to convert, audit, summarize, or explain a FortiGate config.
+
+  '
 version: 1.1.0
+author: Hermes Agent
+license: MIT
+metadata:
+  hermes:
+    tags:
+    - firewall
+    - config-parsing
+    - fortinet
+    - fortigate
+    - fortios
+    - vdom
+    - policy
+    - vip
+    - nat
+    - utm
+    - migration
+    - audit
+    related_skills:
+    - parsing-srx-configs
+    - parsing-palo-configs
+    - parsing-cisco-configs
 ---
 
 # Parsing Fortinet FortiGate Configurations
+
+## Overview
+
+Use this skill to parse Fortinet FortiGate / FortiOS backup or `show full-configuration` output into the shared vendor-neutral firewall intermediate schema. It focuses on nested `config` / `edit` / `set` / `next` / `end` blocks, including VDOMs, interfaces, zones, firewall addresses and services, policies, central SNAT, VIPs, routes, VPN, HA, profiles, and system settings.
+
+FortiOS behavior is version- and feature-dependent. Preserve unknown blocks in `residual_raw`, capture VDOM context, and flag policy/NAT/profile constructs that cannot be mapped cleanly to the intermediate schema.
+
+## When to Use
+
+Use this skill when:
+
+- the user pastes or references FortiGate, FortiOS, or backup configuration output
+- the task is to parse, audit, summarize, compare, or convert a FortiGate configuration
+- the config contains `config firewall policy`, `config firewall address`, `config system interface`, `config vdom`, `set srcintf`, or `set dstintf`
+- you need vendor-neutral JSON before migration to SRX, PAN-OS, ASA/FTD, or another platform
+
+Do not use this skill as a substitute for device-specific validation. When the parse result will drive production changes, verify against current vendor documentation and live device output where available.
 
 You are an expert at parsing Fortinet FortiGate / FortiOS firewall configurations. When given
 raw FortiOS config text, extract all components into a structured intermediate
@@ -334,3 +366,21 @@ After extraction, report:
 - `references/config-format.md` — FortiOS config block syntax reference
 - `references/intermediate-schema.md` — Output schema specification
 - `references/parsing-patterns.md` — Edge cases, mask conversion, application mapping
+
+## Common Pitfalls
+
+1. Do not assume every policy interface is a zone; FortiGate policies can reference zones or raw interfaces.
+2. VIP objects often imply destination NAT when referenced by policies; preserve both policy and NAT intent.
+3. Central SNAT and per-policy NAT are different models; detect both and warn when both are present.
+4. Quoted multi-value fields require tokenizer-aware parsing; whitespace splitting corrupts names with spaces.
+5. Profile groups and individual UTM profiles must be expanded while preserving unmapped FortiGate-specific profile fields.
+
+## Verification Checklist
+
+- [ ] Input vendor/platform and config format were detected correctly
+- [ ] All major object counts are reported: zones, interfaces, addresses, services/applications, policies, NAT, routes, VPN, HA, and system settings
+- [ ] Output conforms to `references/intermediate-schema.md`
+- [ ] Disabled/inactive rules and objects are preserved with explicit state
+- [ ] Unresolved references, unsupported blocks, and parser assumptions are listed in `metadata.warnings` and/or `residual_raw`
+- [ ] Rule order and NAT order are preserved with `_rule_index` or equivalent ordering metadata
+- [ ] Cross-vendor conversion caveats are called out before suggesting target-platform config

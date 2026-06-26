@@ -71,7 +71,7 @@ After copying, your `~/.claude/skills/` directory should look like:
 │   │   ├── config-format.md
 │   │   ├── intermediate-schema.md
 │   │   └── parsing-patterns.md
-│   └── examples/
+│   └── references/
 │       └── sample-parse.md
 ├── parsing-fortinet-configs/
 │   └── (same structure)

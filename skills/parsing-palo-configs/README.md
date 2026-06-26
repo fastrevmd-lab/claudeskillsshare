@@ -71,6 +71,6 @@ parsing-palo-configs/
 │   ├── config-format.md              # PAN-OS XML structure, entry/member patterns
 │   ├── intermediate-schema.md        # Vendor-neutral output schema
 │   └── parsing-patterns.md           # XML parsing, profile groups, dynamic groups
-└── examples/
+└── references/
     └── sample-parse.md               # Worked example with input/output
 ```

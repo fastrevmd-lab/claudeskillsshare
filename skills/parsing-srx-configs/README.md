@@ -69,6 +69,6 @@ parsing-srx-configs/
 │   ├── config-format.md              # Set format, hierarchical format, predefined apps
 │   ├── intermediate-schema.md        # Vendor-neutral output schema
 │   └── parsing-patterns.md           # Name sanitization, IP detection, app mapping
-└── examples/
+└── references/
     └── sample-parse.md               # Worked example with input/output
 ```

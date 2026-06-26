@@ -64,6 +64,6 @@ parsing-fortinet-configs/
 │   ├── config-format.md              # FortiOS block syntax, predefined services
 │   ├── intermediate-schema.md        # Vendor-neutral output schema
 │   └── parsing-patterns.md           # Interface-zone merging, mask conversion
-└── examples/
+└── references/
     └── sample-parse.md               # Worked example with input/output
 ```

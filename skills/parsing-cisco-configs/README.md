@@ -64,6 +64,6 @@ parsing-cisco-configs/
 │   ├── config-format.md              # ASA config syntax reference
 │   ├── intermediate-schema.md        # Vendor-neutral output schema
 │   └── parsing-patterns.md           # Edge cases, port mappings
-└── examples/
+└── references/
     └── sample-parse.md               # Worked example with input/output
 ```

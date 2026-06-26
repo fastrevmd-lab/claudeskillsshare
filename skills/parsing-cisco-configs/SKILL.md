@@ -1,17 +1,47 @@
 ---
 name: parsing-cisco-configs
-description: >
-  Parse and analyze Cisco ASA and FTD firewall configurations. Use this skill when the user
-  pastes, uploads, or references a Cisco ASA or FTD config — line-oriented format with
-  indented sub-commands from "show running-config". Trigger on keywords: ASA, FTD, Cisco,
-  "access-list", "access-group", "object network", "object-group", "object service",
-  "nameif", "security-level", "nat (", "object network", "subnet", "host", "range",
-  "interface GigabitEthernet", "interface Management", "failover", "threat-detection".
-  Also trigger when the user asks to convert, audit, summarize, or explain a Cisco ASA/FTD config.
+description: 'Parse and analyze Cisco ASA and FTD firewall configurations. Use this skill when the user pastes, uploads, or references a Cisco ASA or FTD config — line-oriented format with indented sub-commands from "show running-config". Trigger on keywords: ASA, FTD, Cisco, "access-list", "access-group", "object network", "object-group", "object service", "nameif", "security-level", "nat (", "object network", "subnet", "host", "range", "interface GigabitEthernet", "interface Management", "failover", "threat-detection". Also trigger when the user asks to convert, audit, summarize, or explain a Cisco ASA/FTD config.
+
+  '
 version: 1.1.0
+author: Hermes Agent
+license: MIT
+metadata:
+  hermes:
+    tags:
+    - firewall
+    - config-parsing
+    - cisco
+    - asa
+    - ftd
+    - access-list
+    - nat
+    - migration
+    - audit
+    related_skills:
+    - parsing-srx-configs
+    - parsing-palo-configs
+    - parsing-fortinet-configs
 ---
 
 # Parsing Cisco ASA / FTD Configurations
+
+## Overview
+
+Use this skill to parse Cisco ASA and ASA-style FTD running configurations into the shared vendor-neutral firewall intermediate schema. It focuses on line-oriented `show running-config` text with parent commands and indented subcommands, including interfaces/nameifs, ACLs/access-groups, network and service objects, object-groups, NAT, routes, VPN, failover, and system settings.
+
+Treat FMC-managed FTD exports and API data as adjacent but not identical inputs: parse what is present, preserve unresolved or unsupported structures in `residual_raw`, and call out assumptions rather than inventing missing policy context.
+
+## When to Use
+
+Use this skill when:
+
+- the user pastes or references Cisco ASA, FTD, or `show running-config` output
+- the task is to parse, audit, summarize, compare, or convert an ASA/FTD configuration
+- the config contains `access-list`, `access-group`, `object network`, `object-group`, `nameif`, `security-level`, or `nat (`
+- you need vendor-neutral JSON before migration to SRX, PAN-OS, FortiGate, or another platform
+
+Do not use this skill as a substitute for device-specific validation. When the parse result will drive production changes, verify against current vendor documentation and live device output where available.
 
 You are an expert at parsing Cisco ASA and FTD firewall configurations. When given raw
 ASA/FTD config text, extract all components into a structured intermediate
@@ -344,3 +374,21 @@ After extraction, report:
 - `references/config-format.md` — Cisco ASA config syntax reference
 - `references/intermediate-schema.md` — Output schema specification
 - `references/parsing-patterns.md` — Edge cases, port name mapping, security-level logic
+
+## Common Pitfalls
+
+1. Do not treat IOS wildcard masks as ASA subnet masks; ASA object subnets use standard dotted masks.
+2. Do not infer policy direction from ACL names alone; bind ACLs to interfaces with `access-group`.
+3. Object NAT and manual/twice NAT order matters. Preserve NAT section/order metadata and flag ambiguous translations.
+4. Security levels are not zones by themselves, but they help infer trust roles when no explicit design notes exist.
+5. FTD/FMC-managed output may omit policy context available in FMC; preserve gaps as warnings instead of fabricating rules.
+
+## Verification Checklist
+
+- [ ] Input vendor/platform and config format were detected correctly
+- [ ] All major object counts are reported: zones, interfaces, addresses, services/applications, policies, NAT, routes, VPN, HA, and system settings
+- [ ] Output conforms to `references/intermediate-schema.md`
+- [ ] Disabled/inactive rules and objects are preserved with explicit state
+- [ ] Unresolved references, unsupported blocks, and parser assumptions are listed in `metadata.warnings` and/or `residual_raw`
+- [ ] Rule order and NAT order are preserved with `_rule_index` or equivalent ordering metadata
+- [ ] Cross-vendor conversion caveats are called out before suggesting target-platform config
