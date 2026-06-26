@@ -16,7 +16,7 @@ A collection of Claude Code / Hermes skills for parsing, auditing, converting, a
 | [srx-nat](skills/srx-nat/) | Juniper SRX / Junos NAT | `source nat`, `destination nat`, `static nat`, `NAT64`, `CGN`, `PBA`, `hairpin`, `proxy-arp` |
 | [srx-policy](skills/srx-policy/) | Juniper SRX / Junos security policy | `security policies global`, `from-zone`, `to-zone`, `AppFW`, `AppID`, `NGWF`, `EWF`, `web-filtering`, `SecIntel`, `ATP` |
 
-The four `parsing-*` skills parse vendor-specific configs into a **common vendor-neutral intermediate JSON schema**, enabling cross-vendor comparison, conversion, and unified auditing.
+The four `parsing-*` skills parse vendor-specific configs into a **common vendor-neutral intermediate JSON schema**, enabling cross-vendor comparison, conversion, and unified auditing. They now share common parser quality gates: schema conformance, object counts, unresolved-reference reporting, ordering/state preservation, residual capture, warnings/assumptions, and explicit conversion caveats.
 
 The SRX operational skills are actionable Junos playbooks with commands, design guidance, verification steps, troubleshooting matrices, source attribution, and reference extracts.
 
