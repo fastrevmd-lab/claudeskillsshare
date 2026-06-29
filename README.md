@@ -168,6 +168,12 @@ After copying, your `~/.claude/skills/` directory should look like:
 │   └── references/
 │       ├── source-index.md
 │       └── source-design-summary.md
+├── firewall-best-practices-audit/
+│   ├── SKILL.md
+│   └── references/
+│       ├── check-catalog.md
+│       ├── remediation-patterns.md
+│       └── example-audit.md
 ├── pci-ngfw-compliance/
 │   ├── SKILL.md
 │   └── references/

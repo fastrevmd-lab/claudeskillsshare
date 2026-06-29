@@ -5,7 +5,7 @@
 > reads, default severity, and confidence notes.
 
 Schema field names use the vendor-neutral intermediate schema (canonical reference:
-`skills/parsing-srx-configs/references/intermediate-schema.md`). The brief used
+the canonical intermediate schema (documented in the `parsing-srx-configs` skill)). The brief used
 shorthand aliases (e.g. `rules[]`, `objects`, `vpn.ike`) which are mapped here to
 their real top-level keys: `security_policies[]`, `address_objects` / `service_objects`,
 `vpn_tunnels[].ike`, etc.
@@ -46,7 +46,7 @@ their real top-level keys: `security_policies[]`, `address_objects` / `service_o
 
 - SEC-INBOUND-ANY — inbound any-from-internet permit — `security_policies[]`, `zones` — HIGH — definitive
 
-- SEC-PLAINTEXT-MGMT — plaintext management enabled (telnet/http/SNMPv1-2c) — `system.mgmt_services`, `zones[].host_inbound` — HIGH — definitive
+- SEC-PLAINTEXT-MGMT — plaintext management enabled (telnet or http are definitively detectable from `system.mgmt_services` and `zones[].host_inbound`; SNMPv1/v2c version detection is data-dependent — the schema carries only a boolean `snmp` with no version field, so flag/skip SNMP-version checks per the skill's graceful-degradation rule) — `system.mgmt_services`, `zones[].host_inbound` — HIGH — definitive
 
 - SEC-MGMT-DATAZONE — management services exposed to data/untrusted zones — `zones[].host_inbound` — MEDIUM — definitive
 

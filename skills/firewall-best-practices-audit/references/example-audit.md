@@ -7,7 +7,7 @@
 
 ## Input
 
-- **Fixture:** `skills/parsing-cisco-configs/references/fixture-expected-output.json`
+- **Fixture:** the `parsing-cisco-configs` skill's `fixture-expected-output.json`
 - **Source vendor:** `metadata.vendor: cisco-asa` → remediation snippets use **Cisco ASA/FTD** syntax.
 
 This is the parsed intermediate schema produced by the `parsing-cisco-configs`
