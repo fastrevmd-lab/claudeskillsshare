@@ -49,7 +49,7 @@ Route on what you were given:
 ## Conversion Workflow
 
 1. **Confirm inputs.** Verify you have the intermediate schema (parse raw config first), read `metadata.source_vendor` for the source, and confirm the user's chosen target vendor.
-2. **Load references.** Load `references/feature-mapping.md` for the cross-vendor concept map, plus the target's emitter `references/emit-<target>.md` for the native syntax of each section.
+2. **Load references.** Load `references/feature-mapping.md` for the cross-vendor concept map, plus the appropriate target emitter file (`references/emit-srx.md`, `references/emit-palo.md`, `references/emit-fortinet.md`, or `references/emit-cisco.md`) for the native syntax of each section.
 3. **Emit each section.** Walk the schema sections in the output order below and emit each in the target's native CLI. Where a construct does not map cleanly, emit the closest equivalent and insert an inline `# CAVEAT: ...` comment explaining the approximation.
 4. **Classify for the report.** As you emit, classify each section as converted, converted-with-caveats, or manual-not-converted, and collect the manual follow-up items.
 5. **Placeholder all secrets.** Replace every PSK, key, certificate, and password with a clearly-marked placeholder and add a manual item to re-key on the target — never emit a real or parsed secret.

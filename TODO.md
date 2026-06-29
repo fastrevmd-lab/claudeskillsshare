@@ -52,7 +52,7 @@ parsers were built for, plus vendor-operational breadth.
    complements compliance skills (general hygiene, not framework-mapped). Highest
    recurring-use frequency.
 
-2. [ ] `firewall-config-conversion` — Cross-vendor migration via the intermediate
+2. [x] `firewall-config-conversion` — Cross-vendor migration via the intermediate
    schema (schema → target vendor; e.g. ASA→FTD, ASA/FortiGate→Palo, any→SRX).
    The marquee use of the shared schema. Pair with a conversion fidelity report
    (what did not translate cleanly / manual follow-ups). High per-event value.

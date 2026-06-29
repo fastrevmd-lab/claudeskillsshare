@@ -27,6 +27,7 @@ metadata:
     - parsing-fortinet-configs
     - parsing-cisco-configs
     - firewall-best-practices-audit
+    - firewall-config-conversion
 ---
 
 # Parsing Palo Alto PAN-OS Configurations

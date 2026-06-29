@@ -23,6 +23,7 @@ metadata:
     - parsing-palo-configs
     - parsing-fortinet-configs
     - firewall-best-practices-audit
+    - firewall-config-conversion
 ---
 
 # Parsing Cisco ASA / FTD Configurations

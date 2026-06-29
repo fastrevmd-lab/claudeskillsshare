@@ -26,6 +26,7 @@ metadata:
     - parsing-palo-configs
     - parsing-cisco-configs
     - firewall-best-practices-audit
+    - firewall-config-conversion
 ---
 
 # Parsing Fortinet FortiGate Configurations
