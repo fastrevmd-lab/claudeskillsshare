@@ -6,6 +6,8 @@ section covers non-compliance skills; the rest tracks compliance playbooks.
 
 ## PRIORITY PROJECT: firewall-best-practices-audit v1.1 — SRX coverage gaps
 
+Completed 2026-06-29 — see docs/superpowers/plans/2026-06-29-firewall-best-practices-audit-v1.1.md.
+
 Surfaced by testing the v1.0 audit skill against a real device (`vSRX-Production`,
 Junos 25.4R1, via rust-junosmcp, 2026-06-29). The device was control-plane-hardened
 but **policy-light** (zero `security policies`, only `policy-rematch`), and the audit
@@ -15,22 +17,22 @@ and is blind to where SRX security actually lives. Group these as one v1.1 effor
 (audit-skill checks + schema extensions to feed them).
 
 Schema/parser extensions (prereqs — most checks need new fields):
-- [ ] Parse `system.services.ssh` options (root-login, protocol/ciphers, connection/rate-limit) into the schema.
-- [ ] Parse `zones[].host_inbound` (per-zone host-inbound-traffic system-services/protocols) into the schema.
-- [ ] Parse `security.screen` / IDS options (DoS protections) into the schema.
-- [ ] Carry stateless RE-protection firewall filters (`firewall { family inet filter }`, e.g. lo0 input) at least as a presence flag, not only `residual_raw`.
-- [ ] Parse auth/AAA hardening: `system.login` retry-options/lockout, password policy, `root-authentication` presence, admin users + key types.
+- [x] Parse `system.services.ssh` options (root-login, protocol/ciphers, connection/rate-limit) into the schema.
+- [x] Parse `zones[].host_inbound` (per-zone host-inbound-traffic system-services/protocols) into the schema.
+- [x] Parse `security.screen` / IDS options (DoS protections) into the schema.
+- [x] Carry stateless RE-protection firewall filters (`firewall { family inet filter }`, e.g. lo0 input) at least as a presence flag, not only `residual_raw`.
+- [x] Parse auth/AAA hardening: `system.login` retry-options/lockout, password policy, `root-authentication` presence, admin users + key types.
 
 New audit checks (v1.1):
-- [ ] **SEC-SSH-ROOT-LOGIN** — `ssh root-login allow` (and weak SSH ciphers/no rate-limit) — High.
-- [ ] **SEC-SERVICES-UNREFERENCED** — UTM/IDP/SecIntel/AAMW (or any security service) configured but attached to no policy → inert security stack — High.
-- [ ] **SEC-ZONES-NAT-NO-POLICY** — zones/NAT present but no `security_policies` reference them (NAT translating flows no policy permits) — High.
-- [ ] **SEC-EMPTY-POLICYSET** — `security_policies = []`: emit an explicit coverage warning instead of staying silent; distinguish "default-deny by design" from "partial config / policies in a logical-system/tenant" — Medium.
-- [ ] **SEC-HOST-INBOUND-EXPOSURE** — management/sensitive host-inbound-traffic on untrusted/data zones (broaden beyond the narrow SEC-MGMT-DATAZONE) — Medium.
-- [ ] **SEC-NO-SCREEN** / **OPS-LOG-COMPLETENESS** — untrust zone with no screen bound; security-log stream/host completeness — Medium.
-- [ ] **SEC-AUTH-HARDENING** — missing password policy/login lockout; weak admin auth — Medium/Low.
-- [ ] **IPv6/dual-stack posture** — flag inet6 interfaces with no corresponding v6 controls — Low.
-- [ ] Make `SEC-NO-DENY-ALL` credit/account for SRX implicit-deny vs. the recommended explicit *logged* deny-all (visibility, not just enforcement).
+- [x] **SEC-SSH-ROOT-LOGIN** — `ssh root-login allow` (and weak SSH ciphers/no rate-limit) — High.
+- [x] **SEC-SERVICES-UNREFERENCED** — UTM/IDP/SecIntel/AAMW (or any security service) configured but attached to no policy → inert security stack — High.
+- [x] **SEC-ZONES-NAT-NO-POLICY** — zones/NAT present but no `security_policies` reference them (NAT translating flows no policy permits) — High.
+- [x] **SEC-EMPTY-POLICYSET** — `security_policies = []`: emit an explicit coverage warning instead of staying silent; distinguish "default-deny by design" from "partial config / policies in a logical-system/tenant" — Medium.
+- [x] **SEC-HOST-INBOUND-EXPOSURE** — management/sensitive host-inbound-traffic on untrusted/data zones (broaden beyond the narrow SEC-MGMT-DATAZONE) — Medium.
+- [x] **SEC-NO-SCREEN** / **OPS-LOG-COMPLETENESS** — untrust zone with no screen bound; security-log stream/host completeness — Medium.
+- [x] **SEC-AUTH-HARDENING** — missing password policy/login lockout; weak admin auth — Medium/Low.
+- [x] **IPv6/dual-stack posture** — flag inet6 interfaces with no corresponding v6 controls — Low.
+- [x] Make `SEC-NO-DENY-ALL` credit/account for SRX implicit-deny vs. the recommended explicit *logged* deny-all (visibility, not just enforcement).
 
 Process note: re-run the real-device test (rust-junosmcp `vSRX-Production` and a
 policy-heavy device) after v1.1 to confirm the catalog now exercises >1 check.
