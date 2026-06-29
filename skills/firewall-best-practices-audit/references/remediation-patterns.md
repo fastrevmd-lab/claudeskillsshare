@@ -182,7 +182,7 @@ to specific sources and destinations, never `any`.
   set network profiles interface-management-profile MGMT-ALLOW permitted-ip <mgmt-subnet>
   set network profiles interface-management-profile MGMT-ALLOW ssh yes https yes ping yes
   set network interface ethernet ethernet1/3 layer3 interface-management-profile MGMT-ALLOW
-  set rulebase security rules allow-rdp source <partner-src> destination <rdp-host> service service-rdp action allow log-end yes
+  set rulebase security rules allow-rdp source <partner-src> destination <rdp-host> service <rdp-svc> action allow log-end yes
   ```
 - **FortiGate:** strip mgmt protocols from the WAN interface and pin admin access to a
   trusthost; scope risky inbound to a VIP + source:
@@ -244,8 +244,8 @@ rotate any weak/shared pre-shared key to a long unique secret stored out of band
   ```
 - **Palo PAN-OS:** strong IKE and IPsec crypto profiles, IKEv2 only on the gateway:
   ```
-  set network ike crypto-profiles ike-crypto-profiles STRONG-IKE dh-group group14 encryption aes-256-gcm hash sha256
-  set network ike crypto-profiles ipsec-crypto-profiles STRONG-IPSEC esp encryption aes-256-gcm authentication sha256
+  set network ike crypto-profiles ike-crypto-profiles STRONG-IKE dh-group group14 encryption aes-256-cbc hash sha256
+  set network ike crypto-profiles ipsec-crypto-profiles STRONG-IPSEC esp encryption aes-256-gcm authentication none
   set network ike crypto-profiles ipsec-crypto-profiles STRONG-IPSEC dh-group group14
   set network ike gateway <gw> protocol version ikev2
   set network ike gateway <gw> protocol ikev2 dpd enable yes
@@ -257,7 +257,6 @@ rotate any weak/shared pre-shared key to a long unique secret stored out of band
           set ike-version 2
           set proposal aes256gcm-prfsha256
           set dhgrp 14
-          set mode main
       next
   end
   config vpn ipsec phase2-interface
