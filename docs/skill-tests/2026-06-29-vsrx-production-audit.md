@@ -70,3 +70,37 @@ Tracked as a grouped priority effort in [`TODO.md`](../../TODO.md) →
 (schema/parser extensions + new v1.1 checks). Re-run this exact test (and a
 policy-heavy device) after v1.1 to confirm the catalog exercises more than one
 check.
+
+---
+
+## v1.1 live re-test (2026-06-29, after the v1.1 build)
+
+Re-ran the live audit through `rust-junosmcp` after shipping v1.1
+(`parsing-srx-configs` v1.2.0 + `firewall-best-practices-audit` v1.1.0). The
+device had been **re-configured between pulls** (`Last commit: 2026-06-29
+18:44 by sduser`): three global security policies were added (GeoIP country
+block in/out + an IoT→untrust permit with IDP and SecIntel attached), plus a
+full IDP `Recommended` policy and SecIntel profiles — it is no longer
+policy-light. So this is a stronger, different test than the policy-light
+snapshot the worked example was built from.
+
+**v1.1 findings on the current config (secrets redacted):**
+
+| ID | Severity (confidence) | Evidence |
+|----|----------------------|----------|
+| SEC-SSH-ROOT-LOGIN | High (definitive) | `system services ssh root-login allow` — new v1.1 coverage; v1.0 blind |
+| SEC-SERVICES-UNREFERENCED | High (heuristic) | IDP + SecIntel now referenced by `Allow_set_for_IoT-1`; AAMW and UTM configured but attached to no policy (inert) — new v1.1 coverage |
+| SEC-ANY-ANY | High (definitive, logged) | `Allow_set_for_IoT-1` permits any/any/any IoT→untrust (mitigated by IDP+SecIntel+log) |
+| SEC-ZONES-NAT-NO-POLICY | High (heuristic) | trust→untrust source-NAT with only a country-deny policy for trust→untrust; no general permit |
+| SEC-NO-DENY-ALL | Medium (heuristic) | specific country denies only; no explicit logged catch-all deny |
+
+**Correctly suppressed (present controls → no finding):** SEC-NO-SCREEN (untrust
+`screen untrust-screen`), SEC-AUTH-HARDENING (password policy + login lockout),
+OPS-LOG-COMPLETENESS (security log stream → 192.168.1.150:514),
+SEC-HOST-INBOUND-EXPOSURE (untrust host-inbound = ping only).
+
+**Verdict — regression closed.** On the same current config, v1.0 surfaces ~2
+findings (SEC-ANY-ANY, SEC-NO-DENY-ALL); v1.1 adds SEC-SSH-ROOT-LOGIN,
+SEC-SERVICES-UNREFERENCED, and SEC-ZONES-NAT-NO-POLICY — exactly the
+control-plane / service-hygiene surface v1.0 missed — without over-firing on the
+present controls. The v1.1 coverage goal is met on a live device.

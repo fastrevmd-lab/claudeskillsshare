@@ -4,6 +4,12 @@
 > demand. A single end-to-end audit over a real parsing fixture, demonstrating
 > the workflow, the Finding template, and the Audit Summary. All findings below
 > are grounded in the fixture's actual content — no invented rules or objects.
+>
+> **Note:** this example is a **point-in-time snapshot** of `vSRX-Production`
+> (the policy-light state captured 2026-06-26). The live device is actively
+> managed and its policy set has since changed; this artifact is a stable
+> teaching example, not a live report. See
+> `docs/skill-tests/2026-06-29-vsrx-production-audit.md` for the v1.1 live re-test.
 > This example also demonstrates the skill's **findings-only discipline**: where
 > a best-practice control is already present, no finding is emitted, and the
 > prose says so explicitly.
