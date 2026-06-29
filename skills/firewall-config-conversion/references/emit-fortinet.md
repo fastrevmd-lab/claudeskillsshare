@@ -527,7 +527,7 @@ end
 config vpn ipsec phase2-interface
     edit "VPN-SITEB-P2"
         set phase1name "VPN-SITEB"
-        set proposal aes256gcm-prfsha256
+        set proposal aes256gcm
         set pfs enable
         set dhgrp 14
         set keylifeseconds 3600
@@ -537,7 +537,7 @@ end
 
 - `set ike-version 1` would additionally allow the `set mode {main|aggressive}` leaf; for
   IKEv2 that leaf is **omitted entirely**.
-- Phase2 proposal tokens like `aes256gcm-prfsha256` (AEAD with PRF) are valid FortiOS tokens.
+- PRF tokens like `aes256gcm-prfsha256` are **phase1-interface** proposals only; the **phase2-interface** GCM proposal is the bare `aes256gcm` (no `-prf...` suffix). Under a `phase1-interface`, `aes256gcm-prfsha256` remains correct.
 - A route-based tunnel makes the phase1-interface a virtual interface — add a `config router
   static` route over it and a firewall policy permitting the tunnel traffic.
 - CAVEAT (mandatory): `# CAVEAT: PSK/certificate not converted — re-key the VPN manually on FortiGate before enabling` → **manual-not-converted** item.

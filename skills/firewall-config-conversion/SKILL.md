@@ -42,7 +42,7 @@ Do NOT use this skill when:
 
 Route on what you were given:
 
-- **Parsed intermediate schema** (the vendor-neutral JSON produced by any `parsing-*` skill; the schema definition lives in the `parsing-srx-configs` skill) — convert directly. Read `metadata.source_vendor` to label the draft and to choose source-aware caveats.
+- **Parsed intermediate schema** (the vendor-neutral JSON produced by any `parsing-*` skill; the schema definition lives in the `parsing-srx-configs` skill) — convert directly. Read `metadata.source_vendor` to label the draft and to choose source-aware caveats (the source vendor may appear as `metadata.source_vendor` per the canonical schema or as `metadata.vendor` as some parser fixtures emit, e.g. the Cisco fixture's `"vendor": "cisco-asa"`; read whichever key is present).
 - **Raw config** — identify the vendor from the syntax, run the matching `parsing-*` skill (`parsing-cisco-configs`, `parsing-fortinet-configs`, `parsing-palo-configs`, `parsing-srx-configs`) to produce the intermediate schema, then convert the result. Never re-implement parsing in this skill.
 - **Target vendor** — the user must pick the target (Cisco ASA/FTD, FortiGate, PAN-OS, or SRX). If they did not, ask before emitting; there is one emitter per target and the wrong one produces unusable output.
 

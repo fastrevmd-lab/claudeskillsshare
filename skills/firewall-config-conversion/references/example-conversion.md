@@ -5,7 +5,7 @@ demonstrates the end-to-end workflow against a real parsed fixture and the per-s
 fidelity report.
 
 - **Source:** `skills/parsing-cisco-configs/references/fixture-expected-output.json` —
-  a Cisco ASA config parsed into the intermediate schema (`metadata.source_vendor:
+  a Cisco ASA config parsed into the intermediate schema (`metadata.vendor:
   cisco-asa`).
 - **Target:** Juniper SRX (Junos `set` syntax), emitted per `references/emit-srx.md`.
 - Only objects, zones, policies, NAT, interfaces, and routes that actually exist in the
