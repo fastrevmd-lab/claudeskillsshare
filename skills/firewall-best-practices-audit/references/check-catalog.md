@@ -38,7 +38,7 @@ their real top-level keys: `security_policies[]`, `address_objects` / `service_o
 
 - SEC-DISABLED — disabled-but-present rule (cleanup) — `security_policies[].disabled` — INFO — definitive
 
-- SEC-NO-DENY-ALL — no terminal explicit deny-all where the vendor model expects it — `security_policies[]` tail (`_rule_index`), `metadata.source_vendor` — MEDIUM — heuristic
+- SEC-NO-DENY-ALL — no explicit logged deny-all at the tail of the policy set; on SRX the implicit-deny already enforces block, but an explicit logged deny-all is recommended for visibility — `security_policies[]` tail (`_rule_index`), `metadata.source_vendor` — MEDIUM — heuristic
 
 - SEC-NO-LOG — permit rule without logging — `security_policies[].log_end`, `security_policies[].log_start` — LOW (MEDIUM if broad) — definitive
 
@@ -59,6 +59,22 @@ their real top-level keys: `security_policies[]`, `address_objects` / `service_o
 - SEC-WEAK-IPSEC — weak IPsec (no PFS, weak ESP enc/auth) — `vpn_tunnels[].ipsec` (`ipsec.proposal.dh_group`, `ipsec.proposal.encryption`, `ipsec.proposal.integrity`) — MEDIUM — definitive
 
 - SEC-PSK-WEAK — reused/weak PSK indicators where visible — `vpn_tunnels[].ike.psk` — MEDIUM — heuristic
+
+- SEC-SSH-ROOT-LOGIN — SSH permits root login or uses weak ciphers / no rate-limit — `system.ssh` (`root_login`, `ciphers`, `rate_limit`) — HIGH — definitive
+
+- SEC-SERVICES-UNREFERENCED — a configured security service is attached to no policy (inert security stack) — `security_services` vs `security_policies[].security_profiles` — HIGH — heuristic (depends on profile capture)
+
+- SEC-ZONES-NAT-NO-POLICY — zones/NAT exist but no security_policies reference them — `zones`, `nat_rules`, `security_policies` — HIGH — heuristic
+
+- SEC-EMPTY-POLICYSET — security_policies is empty: emit a coverage warning rather than staying silent; distinguish default-deny-by-design from partial config / logical-system / tenant — `security_policies`, `_logical_system`/`_tenant` markers — MEDIUM — definitive
+
+- SEC-HOST-INBOUND-EXPOSURE — management/sensitive host-inbound services on an untrusted/data zone — `zones[].host_inbound.system_services` — MEDIUM — heuristic
+
+- SEC-NO-SCREEN — an external/untrust zone has no screen bound (binding absence is definitive; classifying a zone as external is heuristic — key off zone name and the default-route-facing interface) — `zones[].screen`, `zones[].interfaces`, `static_routes` — MEDIUM — heuristic
+
+- SEC-AUTH-HARDENING — missing/weak password policy or login lockout — `system.auth` (`password_policy`, `login_lockout`) — MEDIUM — definitive
+
+- SEC-IPV6-POSTURE — interfaces have inet6 addresses but no corresponding v6 controls/policies — `interfaces[].ipv6`, `security_policies` — LOW — heuristic
 
 ---
 
@@ -81,6 +97,8 @@ their real top-level keys: `security_policies[]`, `address_objects` / `service_o
 - OPS-REDUNDANT-OBJ — redundant objects (subset/superset duplicates) — `address_objects`, `service_objects` — LOW — heuristic
 
 - OPS-ZERO-HIT — zero-hit rule (only when usage/hit-count data is present) — `security_policies[].hit_count` (NOT part of the base intermediate schema — it requires external hit-count telemetry, so this check is data-dependent and is skipped unless that data is supplied) — LOW — definitive (skip if no data)
+
+- OPS-LOG-COMPLETENESS — no remote security-log stream/host target configured — `system` syslog/security-log fields — MEDIUM — definitive
 
 ---
 
