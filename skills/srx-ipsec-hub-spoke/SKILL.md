@@ -227,10 +227,13 @@ set security ike proposal IKE-PROP authentication-method pre-shared-keys
 set security ike proposal IKE-PROP dh-group group14
 set security ike proposal IKE-PROP authentication-algorithm sha-256
 set security ike proposal IKE-PROP encryption-algorithm aes-256-cbc
+set security ike proposal IKE-PROP lifetime-seconds 86400
+set security ike policy IKE-POL mode main
 set security ike policy IKE-POL proposals IKE-PROP
 set security ike policy IKE-POL pre-shared-key ascii-text "$IPSEC_PSK"
 set security ipsec proposal IPSEC-PROP protocol esp
 set security ipsec proposal IPSEC-PROP encryption-algorithm aes-256-gcm
+set security ipsec proposal IPSEC-PROP lifetime-seconds 3600
 set security ipsec policy IPSEC-POL perfect-forward-secrecy keys group14
 set security ipsec policy IPSEC-POL proposals IPSEC-PROP
 
@@ -255,6 +258,21 @@ set security zones security-zone VPN interfaces st0.0
 set security zones security-zone VPN interfaces st0.1
 set security zones security-zone VPN interfaces st0.2
 
+# --- Hub security policies (full-tunnel: add VPN->untrust egress + VPN->VPN hairpin) ---
+# (source-NAT rule-set SNAT-INTERNET, zone VPN->untrust, is shown in "Hub NAT and Security Policies")
+set security policies from-zone trust to-zone untrust policy trust-untrust match source-address any
+set security policies from-zone trust to-zone untrust policy trust-untrust match destination-address any
+set security policies from-zone trust to-zone untrust policy trust-untrust match application any
+set security policies from-zone trust to-zone untrust policy trust-untrust then permit
+set security policies from-zone VPN to-zone untrust policy vpn-internet match source-address any
+set security policies from-zone VPN to-zone untrust policy vpn-internet match destination-address any
+set security policies from-zone VPN to-zone untrust policy vpn-internet match application any
+set security policies from-zone VPN to-zone untrust policy vpn-internet then permit
+set security policies from-zone VPN to-zone VPN policy spoke-to-spoke match source-address any
+set security policies from-zone VPN to-zone VPN policy spoke-to-spoke match destination-address any
+set security policies from-zone VPN to-zone VPN policy spoke-to-spoke match application any
+set security policies from-zone VPN to-zone VPN policy spoke-to-spoke then permit
+
 # --- Hub routing: explicit per-spoke LAN routes (no ARI) + egress default ---
 set routing-options static route 192.168.2.0/24 next-hop st0.0
 set routing-options static route 192.168.3.0/24 next-hop st0.1
@@ -266,6 +284,22 @@ set routing-options static route 0.0.0.0/0 next-hop 10.0.0.1      # see ECMP cav
 
 ```
 set interfaces st0 unit 0 family inet
+
+# --- Same IKE/IPsec proposals & policies as the hub (per-device, must be defined here too) ---
+set security ike proposal IKE-PROP authentication-method pre-shared-keys
+set security ike proposal IKE-PROP dh-group group14
+set security ike proposal IKE-PROP authentication-algorithm sha-256
+set security ike proposal IKE-PROP encryption-algorithm aes-256-cbc
+set security ike proposal IKE-PROP lifetime-seconds 86400
+set security ike policy IKE-POL mode main
+set security ike policy IKE-POL proposals IKE-PROP
+set security ike policy IKE-POL pre-shared-key ascii-text "$IPSEC_PSK"
+set security ipsec proposal IPSEC-PROP protocol esp
+set security ipsec proposal IPSEC-PROP encryption-algorithm aes-256-gcm
+set security ipsec proposal IPSEC-PROP lifetime-seconds 3600
+set security ipsec policy IPSEC-POL perfect-forward-secrecy keys group14
+set security ipsec policy IPSEC-POL proposals IPSEC-PROP
+
 set security ike gateway GW-hub ike-policy IKE-POL
 set security ike gateway GW-hub address 10.0.0.2          # the HUB WAN IP
 set security ike gateway GW-hub external-interface ge-0/0/0.0
