@@ -43,7 +43,7 @@ Do NOT use this skill when:
 
 There are two inputs, **A** and **B**. Route each side independently on what you were given:
 
-- **Parsed intermediate schema** (the vendor-neutral JSON produced by any `parsing-*` skill; the schema definition lives in the `parsing-srx-configs` skill) — diff directly. Read each side's source vendor from `metadata.source_vendor` (the canonical schema field) or, for some parser fixtures, `metadata.vendor` (e.g. the Cisco fixture's `"vendor": "cisco-asa"`) — read whichever key is present, and label the two sides A and B by their vendors.
+- **Parsed intermediate schema** (the vendor-neutral JSON produced by any `parsing-*` skill; the schema definition lives in the `parsing-srx-configs` skill) — diff directly. Read each side's source vendor from `metadata.source_vendor` (the canonical schema field); for robustness also accept a legacy `metadata.vendor` key if a non-conformant parse provides one — read whichever is present, and label the two sides A and B by their vendors.
 - **Raw config** — identify the vendor from the syntax, run the matching `parsing-*` skill (`parsing-cisco-configs`, `parsing-fortinet-configs`, `parsing-palo-configs`, `parsing-srx-configs`) to produce the intermediate schema, then diff the result. Never re-implement parsing in this skill.
 
 A and B may be the same vendor (drift, HA-pair, pre/post-change) or different vendors (migration parity, round-trip). The two sides may arrive in different forms — one parsed schema and one raw config — in which case parse the raw side first so both are schema before any comparison begins.
