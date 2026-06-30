@@ -23,7 +23,7 @@ Use this table as a first-pass mapping. Always verify exact text against current
 | 164.310(a) Facility access controls | Firewall management consoles and network equipment protected physically | Datacenter controls, console server restrictions, management network controls |
 | 164.312(a) Access control | Network and remote access to ePHI systems limited to authorized users, processes, services | Firewall rules, VPN policies, zone model, zero-trust/identity policy evidence |
 | 164.312(b) Audit controls | Hardware/software/procedures record and examine activity in systems containing/using ePHI | Syslog/SIEM forwarding, log categories, retention, sample firewall/VPN events |
-| 164.312(c) Integrity | Controls reduce improper alteration/destruction of ePHI and firewall config | Config change control, admin RBAC, policy diff review, threat prevention logs |
+| 164.312(c) Integrity | Protects ePHI from improper alteration/destruction; firewall configuration integrity supports that safeguard | Config change control, admin RBAC, policy diff review, threat prevention logs |
 | 164.312(d) Person or entity authentication | Administrative, VPN, API, and partner access paths authenticate entities | MFA, certificate auth, SSO, VPN auth logs, device posture checks |
 | 164.312(e)(1) Transmission security | ePHI in transit over electronic communications networks protected from unauthorized access | TLS/IPsec/VPN design, allowed protocols, weak protocol removal, inspection policy |
 | 164.312(e)(2)(i) Integrity controls | Transmitted ePHI protected against improper modification without detection | TLS/IPsec settings, secure routing paths, application-layer integrity evidence |

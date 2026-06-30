@@ -84,7 +84,7 @@ Do not assume a VLAN, zone, VPC/VNet, subnet, tag, or “clinical network” lab
 
 The HIPAA Security Rule includes required and addressable implementation specifications. Addressable does not mean optional. For addressable specifications, the entity must assess whether the safeguard is reasonable and appropriate; implement it when reasonable and appropriate; or document why it is not reasonable and appropriate and implement an equivalent alternative measure when reasonable and appropriate.
 
-Firewall-related addressable topics often include encryption, automatic logoff, integrity mechanisms, and transmission security controls. If the firewall design does not use a common safeguard, require a documented rationale and alternative control mapping.
+Firewall-related addressable implementation specifications often include encryption/decryption (164.312(a)(2)(iv)), automatic logoff (164.312(a)(2)(iii)), mechanisms to authenticate ePHI (164.312(c)(2)), and the transmission-security implementation specifications — integrity controls (164.312(e)(2)(i)) and encryption (164.312(e)(2)(ii)). Note 164.312(e)(1) is the required standard; its implementation specifications are the addressable items. If the firewall design does not use a common safeguard, require a documented rationale and alternative control mapping.
 
 ## Reference Material (load on demand)
 

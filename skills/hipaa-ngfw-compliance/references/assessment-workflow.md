@@ -149,7 +149,7 @@ HIPAA 164.312(b) requires mechanisms to record and examine activity in systems t
 - VPN authentication, admin changes, policy changes, threat events, NAT hits, and denied access are logged;
 - logs are sent to a centralized SIEM or log platform with reliable time synchronization;
 - log retention aligns with organizational policy and HIPAA documentation needs;
-- daily/regular review or alerting covers high-risk events such as ePHI-segment denies, vendor VPN access, malware/IPS hits, geo-anomalies, admin login failures, and policy changes;
+- regular, risk-based review or alerting (HIPAA requires regular information-system-activity review, not a prescribed daily cadence) covers high-risk events such as ePHI-segment denies, vendor VPN access, malware/IPS hits, geo-anomalies, admin login failures, and policy changes;
 - log integrity and access controls prevent unauthorized alteration or deletion;
 - sample events can be retrieved for an audit period.
 
