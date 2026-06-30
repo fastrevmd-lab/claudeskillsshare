@@ -5,3 +5,6 @@ entities.json
 
 # Serena project/memory files
 .serena/
+
+# Subagent-driven-development scratch
+.superpowers/
