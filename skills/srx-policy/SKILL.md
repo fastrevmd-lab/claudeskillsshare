@@ -122,6 +122,10 @@ Example global policy skeleton:
 set security address-book global address NET-USERS 10.10.0.0/16
 set security address-book global address NET-SERVERS 10.20.0.0/16
 set security address-book global address DNS-1 10.20.10.53/32
+# BAD-SOURCES: static placeholder; in production replace with a dynamic-address
+# object or SecIntel feed (see srx-dynamic-ip-feed skill).
+set security address-book global address BAD-NET-1 192.0.2.0/24
+set security address-book global address-set BAD-SOURCES address BAD-NET-1
 set applications application-set APP-DNS application junos-dns-udp
 set applications application-set APP-DNS application junos-dns-tcp
 
@@ -170,6 +174,8 @@ Even then, avoid uncontrolled sprawl. Repeated rules across many zone pairs are 
 ## Policy Evaluation and Rule Order
 
 SRX policy is first-packet session policy. The selected policy creates session state; later packets normally follow the session unless policy rematch or session clearing occurs.
+
+**Evaluation order:** zone-pair (`from-zone ... to-zone ...`) policies are evaluated BEFORE global policies for a given flow. If a zone-pair policy table exists for the source/destination zone pair and a rule in that table matches, the global policy is never reached for that flow. A catch-all permit in a zone-pair policy blocks global-policy lookup entirely for that zone pair. Design accordingly: if you intend global policy to govern a zone pair, ensure no conflicting zone-pair policy table shadows it.
 
 Baseline behavior:
 
@@ -309,10 +315,12 @@ set security utm default-configuration web-filtering type ng-juniper
 set security utm default-configuration web-filtering ng-juniper server tls-profile SSL-INIT-NGWF
 set security utm default-configuration web-filtering ng-juniper default log-and-permit
 set services ssl initiation profile SSL-INIT-NGWF client-certificate UTM-CERT
+set services ssl initiation profile SSL-INIT-NGWF actions ignore-server-auth-failure
+set services ssl initiation profile SSL-INIT-NGWF trusted-ca all
 
 set security utm feature-profile web-filtering ng-juniper profile WF-NG-BASE category NG_Gambling_in_general action block
 set security utm feature-profile web-filtering ng-juniper profile WF-NG-BASE default log-and-permit
-set security utm feature-profile web-filtering ng-juniper profile WF-NG-BASE fallback-settings default log-and-permit
+set security utm feature-profile web-filtering ng-juniper profile WF-NG-BASE fallback-settings default permit
 set security utm feature-profile web-filtering ng-juniper profile WF-NG-BASE fallback-settings server-connectivity log-and-permit
 set security utm feature-profile web-filtering ng-juniper profile WF-NG-BASE fallback-settings timeout log-and-permit
 set security utm feature-profile web-filtering ng-juniper profile WF-NG-BASE fallback-settings too-many-requests log-and-permit
@@ -357,7 +365,7 @@ show security utm web-filtering category migrate-to-ng-juniper status
 
 EWF-to-NGWF migration pitfall: Juniper documents the migration as asynchronous and recommends doing it during downtime. Do not rename policy names during migration; Juniper notes configuration commit can fail if policy names are changed during migration.
 
-Use conservative fallback behavior. If the cloud/reputation service is unavailable, choose whether to fail open (`log-and-permit`) or fail closed (`block`/`quarantine`) based on the traffic class, not as a global default for every rule.
+Use conservative fallback behavior. Note the leaf semantics: `fallback-settings default` only accepts `permit` or `block` — `log-and-permit` is NOT valid for the `default` fallback leaf. The `log-and-permit` value is valid for the specific fallback leaves `server-connectivity`, `timeout`, and `too-many-requests`. If the cloud/reputation service is unavailable, choose whether to fail open (`permit`) or fail closed (`block`) for the default fallback leaf, and set granular fallback leaves (`server-connectivity`, `timeout`, `too-many-requests`) to `log-and-permit` or `block` based on traffic class requirements, not as a uniform global setting.
 
 Important IPv6 caveat from Juniper's policy documentation: Content Security for IPv6 sessions is not supported in the referenced policy documentation. If a policy uses wildcard `any` and Content Security features are enabled, use `any-ipv4` for the inspected policy and create separate IPv6 rules without unsupported Content Security services.
 
@@ -448,6 +456,14 @@ show security flow session source-prefix <source> extensive
 show security flow session destination-prefix <destination> extensive
 show security flow session | match "Session ID|Policy name|In:|Out:|NAT|Timeout"
 ```
+
+Policy match prediction (no traffic required):
+
+```text
+show security match-policies from-zone <SRC_ZONE> to-zone <DST_ZONE> source-ip <SRC_IP> destination-ip <DST_IP> protocol <PROTO> source-port <SPORT> destination-port <DPORT>
+```
+
+This predicts which policy a flow will match without sending live traffic — useful for pre-commit validation and troubleshooting shadowed rules.
 
 Applications and AppFW:
 

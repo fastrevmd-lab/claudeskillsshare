@@ -162,11 +162,11 @@ root@srx100> request system license update trial
 
 Adding a license by pasting the license information on the CLI is done by using the following command: 
 
-root@srx100> request system license add terminal [Type ^D at a new line to end input, enter blank line between each license key] JUNOS285045 aeaqea qmifkt iojrgb aummbw gy2qma j4a4ug jka3bt 34fjl4 clkx7w y2rnkb ocbcq2 beh3ip fprbzm piovpz fhyjhu ptcuuw 2qjjwt a JUNOS428378 aeaqea qmifkt iojrgb aummbw gy2qqb qcdw63 xpzia4 uhtsrf n7ff6i c5fpsn ujymx7 senhen llacqq o3ifot 62iabp vknzll wjhoff vhd56t czq JUNOS428379 aeaqea qmifkt iojrgb aummbw gy2qqb qcio63 xpzia4 uekva3 5gkbpn qzzncm osddsz 4pvbvi mq3a46 rgp3re lea3of 722gps s55dtx ed7f3i pny 
+root@srx100> request system license add terminal [Type ^D at a new line to end input, enter blank line between each license key] <REDACTED-LICENSE-KEY> <REDACTED-LICENSE-KEY> <REDACTED-LICENSE-KEY> 
 
 You can review the imported licenses by issuing the following command: 
 
-root@srx100> show system license License usage: Licenses Licenses Licenses Expiry Feature name used installed needed idp-sig 1 1 0 2014-04-08 02:00:00 CEST dynamic-vpn 0 2 0 permanent ax411-wlan-ap 0 2 0 permanent mem-upg 0 1 0 permanent appid-sig 0 1 0 2014-04-08 02:00:00 CEST Licenses installed: License identifier: JUNOS285045 License version: 2 Valid for device: AU4910AF0665 Features: mem-upg - Memory Upgrade permanent License identifier: JUNOS428378 License version: 2 Valid for device: AU4910AF0665 Features: idp-sig - IDP Signature date-based, 2013-04-08 02:00:00 CEST - 2014-04-08 02:00:00 CEST License identifier: JUNOS428379 License version: 2 Valid for device: AU4910AF0665 Features: appid-sig - APPID Signature date-based, 2013-04-08 02:00:00 CEST - 2014-04-08 02:00:00 CEST 
+root@srx100> show system license License usage: Licenses Licenses Licenses Expiry Feature name used installed needed idp-sig 1 1 0 2014-04-08 02:00:00 CEST dynamic-vpn 0 2 0 permanent ax411-wlan-ap 0 2 0 permanent mem-upg 0 1 0 permanent appid-sig 0 1 0 2014-04-08 02:00:00 CEST Licenses installed: License identifier: <REDACTED-LICENSE-KEY> License version: 2 Valid for device: AU4910AF0665 Features: mem-upg - Memory Upgrade permanent License identifier: <REDACTED-LICENSE-KEY> License version: 2 Valid for device: AU4910AF0665 Features: idp-sig - IDP Signature date-based, 2013-04-08 02:00:00 CEST - 2014-04-08 02:00:00 CEST License identifier: <REDACTED-LICENSE-KEY> License version: 2 Valid for device: AU4910AF0665 Features: appid-sig - APPID Signature date-based, 2013-04-08 02:00:00 CEST - 2014-04-08 02:00:00 CEST 
 
 Now that the licenses are available on the SRX, we need to download the AppFW security packages from the Juniper back-end. 
 
