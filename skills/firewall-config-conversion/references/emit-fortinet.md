@@ -179,7 +179,9 @@ Action / logging map:
 | Schema | FortiOS `set` |
 |--------|---------------|
 | `action: allow` | `set action accept` |
-| `action: deny` / `reject` | `set action deny` (FortiGate has no separate reject) |
+| `action: deny` | `set action deny` (silent drop) |
+| `action: drop` | `set action deny` (FortiGate `deny` already silently drops) |
+| `action: reset-both` | `set action deny` + `# CAVEAT: source action reset-both — FortiGate base policy has no per-rule TCP reset; emitted as deny (silent drop), no RST sent` |
 | `log_start: true` + `log_end` | `set logtraffic all` (logs session start+end) |
 | `log_end only` | `set logtraffic all` (no UTM-only without UTM) |
 | UTM logging only | `set logtraffic utm` |
@@ -222,13 +224,14 @@ end
 - `srcaddr`/`dstaddr`/`service` take space-separated quoted object names; multiple values on
   one `set` line is the FortiOS idiom (unlike SRX one-leaf-per-line).
 - A `deny` policy should still `set logtraffic all` to preserve audit intent.
-- CAVEAT when reject collapses to deny:
-  `# CAVEAT: source 'reject' emitted as 'deny' — FortiGate sends no TCP RST/ICMP unreachable`.
+- CAVEAT when reset-both collapses to deny:
+  `# CAVEAT: source action 'reset-both' emitted as 'deny' — FortiGate base policy sends no per-rule TCP RST/ICMP unreachable`.
 
-### security_services on a policy (UTM profiles)
+### security-profile attachments on a policy (UTM profiles)
 
 **Classification: converted-with-caveats** — attachment shape converts; profile **contents**
-are vendor-proprietary (`feature-mapping.md` → security_profiles).
+are vendor-proprietary. Source from `security_policies[].security_profiles` /
+`security_profile_objects` (`feature-mapping.md` → security profile attachments).
 
 Set `set utm-status enable` and reference per-feature profiles by name. The profiles
 themselves must be (re)built on the target — emit references only, not signature contents:
@@ -345,7 +348,7 @@ end
 - Sub-interfaces (`is_subif`) → `set type vlan`, `set vlanid <n>`, `set interface "<parent>"`,
   with the conventional `<parent>.<id>` edit name.
 - Aggregate (`lag_*`) → `set type aggregate` + `set member "port3" "port4"`.
-- `set allowaccess` carries the management services (see security_services).
+- `set allowaccess` carries the management services (see management-plane access).
 - CAVEAT (always, first interface):
   `# CAVEAT: interface names remapped positionally — verify against target FortiGate port layout and bindings`.
 
@@ -603,12 +606,15 @@ end
 - CAVEAT only when recurrence can't be expressed exactly:
   `# CAVEAT: source recurrence approximated — verify schedule day/time windows`.
 
-## security_services (management access)
+## management-plane access (`zones[].host_inbound` / `system.mgmt_services`)
 
 **Classification: converted-with-caveats** — container differs across vendors
-(`feature-mapping.md` → security_services). These are the management services an interface
-accepts; on FortiGate they render as `set allowaccess` on `config system interface` (see
-interfaces).
+(`feature-mapping.md` → management-plane access). Source these from the schema's
+**`zones[].host_inbound`** (per-zone accepted management services) and
+**`system.mgmt_services`** (device/system-level management) — **not** from
+`security_services`, which is only a device-wide security-service presence flag set
+(app_id/idp/secintel/aamw/utm) and carries no management access. On FortiGate the per-zone
+services render as `set allowaccess` on `config system interface` (see interfaces).
 
 ```
 config system interface
@@ -634,7 +640,7 @@ end
 - [ ] Every `config` has a matching `end`; every `edit` a matching `next`; sub-blocks closed.
 - [ ] Subnets emitted as dotted-decimal masks, not CIDR (v4); v6 uses `ip6`/`address6`.
 - [ ] Security-policy order preserved via ascending `edit <id>` in source order; disabled rules emitted with `set status disable`, not dropped.
-- [ ] `allow→accept`, `deny/reject→deny`, logging→`logtraffic all|utm|disable`; UTM profiles referenced (not their contents).
+- [ ] `allow→accept`, `deny→deny`, `drop→deny`, `reset-both→deny`+CAVEAT (no per-rule RST), logging→`logtraffic all|utm|disable`; UTM profiles referenced (not their contents).
 - [ ] NAT re-anchored: source→policy `set nat enable` (+ ippool), dest/static→`config firewall vip`; order preserved.
 - [ ] Zones synthesized over interfaces; `srcintf`/`dstintf` reference zone OR interface names; interface-as-zone CAVEAT emitted.
 - [ ] Predefined service names used where the canonical table allows; custom ports defined under `config firewall service custom`.

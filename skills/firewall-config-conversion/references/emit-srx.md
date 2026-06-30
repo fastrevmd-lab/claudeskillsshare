@@ -110,7 +110,7 @@ set applications application-set APP-DNS application junos-dns-tcp
 FortiGate/ASA — see `feature-mapping.md` → zones).
 
 Render one security-zone per schema zone, bind its interfaces, and emit allowed
-management services from the zone's `host_inbound` (see security_services).
+management services from the zone's `host_inbound` (see management-plane access).
 
 ```
 set security zones security-zone TRUST interfaces ge-0/0/0.0
@@ -138,8 +138,9 @@ Action and logging map:
 | Schema | SRX `then` leaf (own line) |
 |--------|----------------------------|
 | `action: allow` | `then permit` |
-| `action: deny` | `then deny` |
-| `action: reject` | `then reject` |
+| `action: deny` | `then deny` (silent drop) |
+| `action: drop` | `then deny` (SRX `deny` already silently drops; distinct from `reset-both`) |
+| `action: reset-both` | `then reject` (sends TCP RST / ICMP unreachable to both ends) |
 | `log_start: true` | `then log session-init` |
 | `log_end: true` | `then log session-close` |
 | (counters) | `then count` |
@@ -164,9 +165,10 @@ set security policies global policy 100-USERS-WEB then count
   `destination-address` on the same line, or `then permit` followed by `log session-close`,
   are both invalid. Split into separate lines as shown above.
 
-### security_profiles on a policy
+### security-profile attachments on a policy
 
-Schema `security_profiles` (UTM / IDP / AppFW / SecIntel intent) attach **only on permit**,
+Schema `security_policies[].security_profiles` (UTM / IDP / AppFW / SecIntel intent,
+resolving `security_profile_objects` for contents) attach **only on permit**,
 each service on its own `then permit application-services …` leaf line:
 
 ```
@@ -177,7 +179,7 @@ set security policies global policy 200-USERS-WEB then permit application-servic
 
 - **Classification: converted-with-caveats** — the attachment shape converts; profile
   **contents** are vendor-proprietary. Emit:
-  `# CAVEAT: profile contents (signatures/categories/actions) must be rebuilt on SRX — only the attachment is converted` (per `feature-mapping.md` → security_profiles).
+  `# CAVEAT: profile contents (signatures/categories/actions) must be rebuilt on SRX — only the attachment is converted` (per `feature-mapping.md` → security profile attachments).
 - If source is Cisco ASA (no UTM model), there is nothing to attach → record as
   **manual-not-converted** in the report, not in config.
 - `then log session-init` / `then log session-close` are still separate lines from the
@@ -430,11 +432,15 @@ set security policies global policy 100-USERS-WEB scheduler-name BIZ-HOURS
 - CAVEAT only when recurrence can't be expressed exactly:
   `# CAVEAT: source recurrence approximated — verify scheduler day/time windows`.
 
-## security_services (per-zone host-inbound management)
+## management-plane access (`zones[].host_inbound` / `system.mgmt_services`)
 
 **Classification: converted-with-caveats** — container differs across vendors
-(`feature-mapping.md` → security_services). These are the management services an
-interface/zone accepts; render under each zone's `host-inbound-traffic`.
+(`feature-mapping.md` → management-plane access). Source these from the schema's
+**`zones[].host_inbound`** (per-zone accepted management services) and
+**`system.mgmt_services`** (device/system-level management) — **not** from
+`security_services`, which is only a device-wide security-service presence flag set
+(app_id/idp/secintel/aamw/utm) and carries no management access. Render the per-zone
+services under each zone's `host-inbound-traffic`.
 
 ```
 set security zones security-zone TRUST host-inbound-traffic system-services ssh

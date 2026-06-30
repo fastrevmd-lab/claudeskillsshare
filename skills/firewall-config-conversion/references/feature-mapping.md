@@ -60,13 +60,15 @@ This table is the **reverse** direction: canonical → what to emit per target.
 | `ospf` | IP/89 | `junos-ospf` | `ospf` | `OSPF` | `89` (IP proto) |
 | `sip` | UDP/5060 | `junos-sip` | `sip` | `SIP` | `udp/5060` |
 | `h323` | TCP/1720 | `junos-h323` | `h.323` | `H323` | `tcp/1720` |
-| `msrpc` | TCP/135 | `junos-ms-rpc` | `msrpc` | `DCE-RPC` | `tcp/135` |
+| `msrpc` | TCP/135 | `junos-ms-rpc` | `msrpc` | `MS-RPC` | `tcp/135` |
 | `mssql` | TCP/1433 | `junos-ms-sql` | `mssql-db` | `MS-SQL` | `tcp/1433` |
 | `mysql` | TCP/3306 | `junos-mysql` | `mysql` | `MYSQL` | `tcp/3306` |
 | `smb` | TCP/445 | `junos-smb` | `ms-ds-smb` | `SMB` | `tcp/445` |
 | `rdp` | TCP/3389 | `junos-rdp` | `ms-rdp` | `RDP` | `tcp/3389` |
 | `ipsec` (IKE) | UDP/500 | `junos-ike` | `ike` | `IKE` | `udp/500` |
 | `ipsec-nat-t` | UDP/4500 | `junos-ike-nat-t` | `ipsec-esp-udp` | `IKE` (nat-t) | `udp/4500` |
+| `esp` | IP/50 | `junos-esp` | `ipsec-esp` | `ESP` | `50` (IP proto) |
+| `ah` | IP/51 | `junos-ah` | `ipsec-ah` | `AH` | `51` (IP proto) |
 | `pptp` | TCP/1723 | `junos-pptp` | `pptp` | `PPTP` | `tcp/1723` |
 | `ping` | ICMP | `junos-icmp-all` | `ping`/`icmp` | `PING`/`ALL_ICMP` | `icmp` |
 | `ping6` | ICMPv6 | `junos-icmpv6-all` | `ipv6-icmp` | `PING6` | `icmp6` |
@@ -127,9 +129,15 @@ is **loss**: preserve rule order, re-anchor to the target's container, and
 `# CAVEAT:` on pool/VIP restructuring. Hide/proxy-ARP and bidirectional flags rarely
 survive cleanly — flag for review.
 
-### security_profiles (UTM / threat)
+### security profile attachments (UTM / threat)
 
-| Vendor | Construct |
+Not a standalone top-level schema section. UTM / threat intent lives in the schema as
+**per-policy attachments** (`security_policies[].security_profiles`) referencing reusable
+**`security_profile_objects`** (the top-level object pool). Convert it as a policy
+attachment, not as its own section; never emit/report a top-level `security_profiles`
+section.
+
+| Vendor | Construct (attachment point) |
 |--------|-----------|
 | SRX | `then permit application-services` → utm-policy / IDP / SecIntel / AppFW |
 | Palo | `security-profile-group` (AV, AS, vuln, URL, WildFire, file-blocking) attached to rule |
@@ -138,9 +146,10 @@ survive cleanly — flag for review.
 
 Mapping: profile **attachment points** are conceptually similar on SRX/Palo/FortiGate but
 the **profile contents are vendor-proprietary** (signature sets, categories, actions do not
-translate). Emit the attachment shape and `# CAVEAT: profile contents must be rebuilt on
+translate). Emit the attachment shape (from `security_policies[].security_profiles`, resolving
+`security_profile_objects` for contents) and `# CAVEAT: profile contents must be rebuilt on
 target`, classify `converted-with-caveats`. To **Cisco ASA → manual-not-converted**: there
-is no equivalent; record every dropped profile as a manual item.
+is no equivalent; record every dropped profile attachment as a manual item.
 
 ### vpn_tunnels (IKE / IPsec)
 
@@ -229,15 +238,30 @@ recurrence syntax (day/time-range encodings differ). Emit the equivalent schedul
 reference; `# CAVEAT:` only if recurrence semantics can't be expressed exactly. FortiGate
 `always` maps to "no schedule" on the others.
 
-### security_services / system-services
+### management-plane access (NOT `security_services`)
 
-Per-zone allowed host-inbound management services (SRX
-`host-inbound-traffic system-services`), Palo interface-mgmt-profile, FortiGate
-`set allowaccess`, and ASA `http`/`ssh`/`telnet`/`icmp` permit lines all express **which
-management services an interface/zone accepts**. **Loss**: the container differs
-(zone vs interface-mgmt-profile vs `allowaccess` vs management permit lines). Emit the
-closest form and `# CAVEAT: verify management-plane exposure on target`. Never emit
-management secrets/keys — placeholder and flag manual.
+Two distinct schema fields carry management-plane exposure — neither is `security_services`:
+
+- **`zones[].host_inbound`** — per-zone allowed host-inbound management services (SRX
+  `host-inbound-traffic system-services`/`protocols`; the analog of Palo
+  interface-mgmt-profile, FortiGate `set allowaccess`, ASA `http`/`ssh`/`telnet`/`icmp`
+  permit lines). This expresses **which management services an interface/zone accepts**.
+- **`system.mgmt_services`** — device/system-level management services (dedicated mgmt
+  interface, system-wide service enable).
+
+**Loss**: the container differs (zone host-inbound vs interface-mgmt-profile vs
+`allowaccess` vs management permit lines). Emit the closest form and
+`# CAVEAT: verify management-plane exposure on target`. Never emit management secrets/keys —
+placeholder and flag manual.
+
+### security_services (device-wide security-service presence)
+
+Separate concern from management access. `security_services` is a **device-wide presence
+flag set** for the NGFW security services in use — `app_id`, `idp`, `secintel`, `aamw`,
+`utm`. It does **not** carry management access and does not by itself convert to config; use
+it to drive **caveats** about which security services the source relied on and must be
+rebuilt on the target. The per-policy attachments (see *security profile attachments*) are
+where the actual UTM/threat config is emitted.
 
 ---
 
@@ -246,8 +270,9 @@ management secrets/keys — placeholder and flag manual.
 - **1:1 (clean):** address/service objects & groups, schedules (intent), basic
   static routes, SRX↔Palo zones.
 - **converted-with-caveats (loss):** zones to/from FortiGate & ASA, all nat_rules,
-  security_profiles on SRX/Palo/Forti, vpn crypto params, interfaces (naming),
-  routing-instances/VRF, OSPF/BGP, screens to Palo/Forti, security_services.
-- **manual-not-converted:** security_profiles → Cisco ASA, screens → Cisco ASA,
+  security-profile attachments on SRX/Palo/Forti, vpn crypto params, interfaces (naming),
+  routing-instances/VRF, OSPF/BGP, screens to Palo/Forti, management-plane access
+  (`zones[].host_inbound` / `system.mgmt_services`).
+- **manual-not-converted:** security-profile attachments → Cisco ASA, screens → Cisco ASA,
   VPN pre-shared-keys/certs (all targets — secrets never emitted), App-Control intent on
   FortiGate, any unresolved (confidence 0.0) application.

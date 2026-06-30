@@ -102,7 +102,7 @@ single `object service` for one port, or an `object-group service` for a set of 
 object service SVC-HTTPS-8443
  service tcp destination eq 8443
 object service SVC-APP-RANGE
- service tcp destination range 8080 8090 source range 1024 65535
+ service tcp source range 1024 65535 destination range 8080 8090
 object service SVC-DNS-UDP
  service udp destination eq 53
 ```
@@ -184,8 +184,9 @@ Action / logging map:
 | Schema | ASA ACE |
 |--------|---------|
 | `action: allow` | `... permit ...` |
-| `action: deny` | `... deny ...` |
-| `action: reject` | `... deny ...` (ASA ACL has no separate reject; see note) |
+| `action: deny` | `... deny ...` (silent drop) |
+| `action: drop` | `... deny ...` (ASA ACL drops silently — same emitted form as `deny`) |
+| `action: reset-both` | `... deny ...` + `# CAVEAT: source action reset-both — ASA ACL has no per-rule TCP reset; emitted as deny (silent drop). A global `service resetinbound`/`set connection ... reset` is the closest, manual` |
 | `log_*` set | append `log` (optionally `log <level> interval <n>`) |
 | `disabled: true` | append `inactive` (preserve, don't drop) |
 | `schedule` ref | append `time-range <name>` (see schedules) |
@@ -213,7 +214,7 @@ access-group outside_in in interface outside
   `# CAVEAT: L7 application match decomposed to port(s) — classic ASA has no App-ID; application identity lost`.
 - CAVEAT (mandatory when source rule had UTM/security profiles):
   `# CAVEAT: per-rule UTM/IPS/URL/AV profile has no classic-ASA equivalent — dropped; rebuild on FTD (FMC ACP + intrusion/file policies)` → **manual-not-converted** for the profile intent.
-- CAVEAT (reject): `# CAVEAT: source 'reject' emitted as ACL deny — ASA drops silently, no TCP RST/ICMP unreachable from the ACE`.
+- CAVEAT (reset-both): `# CAVEAT: source action 'reset-both' emitted as ACL deny — ASA ACE drops silently, no per-rule TCP RST/ICMP unreachable; global 'service resetinbound' is the closest, manual`.
 - **FTD note (see header):** on FMC-managed FTD these ACEs are the *intent* for ACP rules,
   not deployable `access-list` CLI.
 
@@ -458,19 +459,23 @@ time-range MAINT-WINDOW
 - CAVEAT only when recurrence can't be expressed exactly:
   `# CAVEAT: source recurrence approximated — verify time-range day/time windows`.
 
-## security_services (UTM / NGFW profiles + management access)
+## security-profile attachments & management-plane access
 
-**Classification: manual-not-converted** for UTM/NGFW intent on classic ASA;
-**converted-with-caveats** for management-plane access.
+Two distinct schema concerns, neither named `security_services` (which is only a device-wide
+security-service presence flag set — app_id/idp/secintel/aamw/utm — used for caveats, not
+config):
 
+**1. Security-profile attachments (`security_policies[].security_profiles` /
+`security_profile_objects`) — Classification: manual-not-converted.**
 Classic ASA has **no NGFW UTM** (AV/IPS/URL/WildFire/app-control) — there is nothing to
-attach. Record every dropped source security profile as a manual item; rebuild on **FTD**
-(FMC intrusion / file / URL policies in the ACP), not on ASA.
+attach. Record every dropped source security-profile attachment as a manual item; rebuild on
+**FTD** (FMC intrusion / file / URL policies in the ACP), not on ASA.
 
-- CAVEAT (mandatory): `# CAVEAT: classic ASA has no UTM/IPS/URL/AV/app-control — source security profiles dropped; rebuild on Firepower/FTD via FMC (intrusion + file + URL policies). Not converted`.
+- CAVEAT (mandatory): `# CAVEAT: classic ASA has no UTM/IPS/URL/AV/app-control — source security-profile attachments dropped; rebuild on Firepower/FTD via FMC (intrusion + file + URL policies). Not converted`.
 
-Management-plane access (which services an interface accepts) maps to ASA management
-permit lines — keyed by `nameif`:
+**2. Management-plane access (`zones[].host_inbound` / `system.mgmt_services`) —
+Classification: converted-with-caveats.** Which management services an interface/zone
+accepts maps to ASA management permit lines — keyed by `nameif`:
 
 ```
 ssh 10.10.0.0 255.255.255.0 inside
