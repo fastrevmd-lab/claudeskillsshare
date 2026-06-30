@@ -75,6 +75,7 @@ their real top-level keys: `security_policies[]`, `address_objects` / `service_o
 - SEC-AUTH-HARDENING — missing/weak password policy or login lockout — `system.auth` (`password_policy`, `login_lockout`) — MEDIUM — definitive
 
 - SEC-IPV6-POSTURE — interfaces have inet6 addresses but no corresponding v6 controls/policies — `interfaces[].ipv6`, `security_policies` — LOW — heuristic
+- SEC-NO-CONTROL-PLANE-PROTECTION — no stateless control-plane / RE-protection filter applied (SRX lo0 input filter; Cisco CoPP; Palo/FortiGate mgmt profile) on a device with an untrusted-facing interface — `system.control_plane_protection` (`re_filter_present`, `applied_to`), `zones`/`interfaces` — MEDIUM — heuristic
 
 ---
 

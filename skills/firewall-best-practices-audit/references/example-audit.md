@@ -73,7 +73,7 @@ the audit stays silent rather than manufacturing a finding:
   No finding.
 - **SEC-HOST-INBOUND-EXPOSURE does not fire.** `untrust` host-inbound is `ping`
   only — no ssh/https/snmp management surface on the untrusted zone. No finding.
-- **Control-plane filter present.** `re_filter_present: true` (PROTECT-RE on
+- **Control-plane filter present (SEC-NO-CONTROL-PLANE-PROTECTION not fired).** `re_filter_present: true` (PROTECT-RE on
   lo0.0) — the loopback filter that protects the RE is in place.
 
 **7. Output.** Findings, then the Audit Summary.
