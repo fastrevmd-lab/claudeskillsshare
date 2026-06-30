@@ -81,7 +81,7 @@ Examples:
 ```text
 ISO:NETSEC SOA:A8.20 OWNER:NetSec REF:NET-STD-001 PURPOSE:Production edge segmentation
 ISO:ACCESS SOA:A5.15 OWNER:AppOps REF:CHG-18821 PURPOSE:App to database least privilege
-ISO:MONITOR SOA:A8.15 OWNER:SecOps REF:SIEM-FW-01 PURPOSE:Forward firewall logs to SIEM
+ISO:LOGGING SOA:A8.15 OWNER:SecOps REF:SIEM-FW-01 PURPOSE:Forward firewall logs to SIEM   (A.8.15 Logging; use ISO:MONITOR SOA:A8.16 for monitoring activities)
 ISO:SUPPLIER SOA:A5.19 OWNER:NetOps REF:MSP-ACCESS-02 PURPOSE:Time-bound MSSP access
 ISO:CONFIG SOA:A8.9 OWNER:NetSec REF:BASELINE-FW-01 PURPOSE:Approved secure firewall baseline
 ISO:IR SOA:A5.26 OWNER:SecOps REF:IR-FW-01 PURPOSE:Containment path for incidents

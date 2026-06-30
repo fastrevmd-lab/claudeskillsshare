@@ -76,7 +76,7 @@ If the user does not provide ISMS scope or SoA context, state assumptions and pr
 
 Detailed lookup material lives in `references/` to keep this skill lean; read these when you need them:
 
-- `references/control-mapping.md` — ISO 27001 / Annex A Mapping for Firewall Work (full control-by-control matrix).
+- `references/control-mapping.md` — ISO 27001 / Annex A practical theme mapping for firewall work (by category, with key 2022 Annex A control IDs).
 - `references/assessment-workflow.md` — step-by-step assessment workflow, config evidence markers, and the evidence request checklist:
   1. Establish ISMS Context
   2. Build an ISO Firewall Evidence Matrix
@@ -106,7 +106,7 @@ Recommendation: Restrict vendor access by named identity, MFA, source, service, 
 
 ```text
 Recommended description:
-ISO:MONITOR SOA:A8.15 OWNER:SecOps REF:SIEM-FW-01 PURPOSE:Forward threat logs to SIEM
+ISO:LOGGING SOA:A8.15 OWNER:SecOps REF:SIEM-FW-01 PURPOSE:Forward firewall/threat logs to SIEM   (use ISO:MONITOR SOA:A8.16 for alert-review/monitoring evidence)
 
 Do not include secrets, personal data, customer data, vulnerability detail, incident detail, or sensitive architecture. Store detailed support in the GRC/ticket/evidence repository.
 ```

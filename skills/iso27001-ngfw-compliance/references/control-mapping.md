@@ -11,8 +11,8 @@ Use this as a practical mapping. Exact control numbering and wording should be v
 | Organizational controls and risk treatment | Firewall requirements driven by risk assessment, SoA, policies, ownership, and control objectives | ISMS scope, SoA, risk register, risk treatment plan, firewall policy standard |
 | Information security roles and responsibilities | Defined owners for firewall platforms, rules, reviews, exceptions, and alerts | RACI, owners, rule metadata, review approvals |
 | Asset and information inventory | Identify firewall assets, protected networks, services, data flows, and management systems | CMDB, firewall inventory, network diagrams, data-flow diagrams |
-| Access control and access rights | Enforce least-privilege network, admin, VPN, vendor, and application access | Rulebase exports, access reviews, admin RBAC, VPN groups, identity integration |
-| Authentication information | Protect firewall admin and remote-access authentication | MFA/AAA evidence, password/key policy, break-glass process, local-account review |
+| Access control (A.5.15), Access rights (A.5.18), Privileged access rights (A.8.2) | Least-privilege network/VPN/vendor/app access (A.5.15/A.5.18); privileged firewall admin RBAC (A.8.2) | Rulebase exports, access reviews, admin RBAC, VPN groups, identity integration |
+| Secure authentication (A.8.5) + Authentication information (A.5.17) | MFA/AAA for firewall admin and remote access (A.8.5); credential/key/break-glass handling (A.5.17) | MFA/AAA evidence, password/key policy, break-glass process, local-account review |
 | Information access restriction | Segment sensitive systems and restrict inbound/outbound/east-west paths | Zone model, segmentation rules, data-flow evidence, egress controls |
 | Supplier and service-provider relationships | Control MSP/MSSP/vendor/cloud-provider firewall access and shared responsibilities | Contracts, provider access records, shared responsibility matrix, supplier review |
 | ICT supply chain / cloud service usage | Govern cloud firewalls, WAFs, security groups, SASE/ZTNA, and managed SOC controls | Cloud architecture, provider responsibilities, managed-rule evidence |
