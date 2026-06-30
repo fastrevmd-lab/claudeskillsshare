@@ -108,7 +108,7 @@ Interface types: detect `Port-channel*` as lag, `Tunnel*` as tunnel, `Loopback*`
 ### 2. Zones (Derived from Interfaces)
 ASA doesn't have explicit zones. Derive them from `nameif` values:
 - Each unique `nameif` becomes a zone
-- Zone trust level comes from `security-level`
+- `security-level` values are parser-internal inference metadata used to determine relative trust ordering between zones (higher = more trusted). This is NOT emitted as a `security_level` or `trust_level` field in the intermediate schema — use it only to guide ordering or warn when ACLs are absent.
 - Associate the interface with its zone
 
 ### 3. Network Objects
@@ -220,7 +220,7 @@ Found inside `object network` blocks as `nat (<real-iface>,<mapped-iface>) <type
 Top-level: `nat (<real-iface>,<mapped-iface>) [<section>] source <type> <real-src> <mapped-src> [destination <type> <real-dst> <mapped-dst>] [service <real-svc> <mapped-svc>]`
 
 Parse `source static|dynamic` and optional `destination static` components.
-Section numbers (1, 2, after-auto) determine NAT rule ordering.
+Section numbers determine NAT rule ordering: Section 1 = manual/twice NAT before object/auto NAT (the default when no section keyword is given); Section 2 = object/auto NAT (rules inside `object network` blocks); Section 3 = manual NAT placed after all auto NAT via the `after-auto` keyword.
 
 ### 11. Time Ranges (Schedules)
 Source: `time-range <name>` blocks

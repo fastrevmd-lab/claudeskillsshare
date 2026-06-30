@@ -103,7 +103,7 @@ object service custom-https
  service tcp destination eq 8443
 !
 object service custom-range
- service tcp destination range 8080 8090 source range 1024 65535
+ service tcp source range 1024 65535 destination range 8080 8090
 ```
 
 Format: `service <protocol> [source <op> <port>] [destination <op> <port>]`
@@ -201,9 +201,8 @@ Or: `access-group <acl-name> global`
 ### Zone Derivation from Access Groups
 
 - `access-group outside_in in interface outside`:
-  - ACL entries get `dst_zones: ["outside"]` (traffic entering the outside interface goes TO outside... wait, no)
-  - Actually: `in interface outside` means traffic is COMING IN on outside interface
-  - So the outside interface is the **source zone** for this traffic flow
+  - `in interface outside` means traffic is COMING IN on the outside interface
+  - Source zone = ingress interface (outside); destination zone = inferred from routing or set to `any` with a warning — never blindly the ingress interface
   - The destination zone depends on routing (often requires manual review)
 
 **Simplified approach:** For `in` direction on interface X:
@@ -234,7 +233,7 @@ nat (inside,outside) 1 source static web-server 203.0.113.10 service tcp-80 tcp-
 
 Format: `nat (<real>,<mapped>) [<section>] source <static|dynamic> <real-src> <mapped-src> [destination <static> <real-dst> <mapped-dst>] [service <real-svc> <mapped-svc>]`
 
-Section numbers: 1 (before auto), 2 (after auto), or omitted (section 2)
+Section numbers: 1 = manual/twice NAT before auto (default when no section keyword is given); 2 = object/auto NAT (inside `object network` blocks); `after-auto` keyword = section 3 (manual NAT placed after all auto NAT).
 
 ## Static Routes
 
