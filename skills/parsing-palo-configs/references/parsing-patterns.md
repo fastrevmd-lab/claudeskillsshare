@@ -7,30 +7,20 @@
 3. **Ignore XML attributes** except `name` on entry elements
 4. **Handle missing elements gracefully** — many optional fields may be absent
 
-## Application Mapping to Junos
+## Application Handling (raw + canonical)
 
-PAN-OS uses its own application names. Map to Junos predefined applications:
+The parser is vendor-neutral: it never maps PAN-OS application names to a specific target
+platform (Junos, FortiGate, etc.). Target-name translation belongs to conversion, not parsing.
 
-| PAN-OS App | Junos Equivalent |
-|---|---|
-| web-browsing | junos-http |
-| ssl | junos-https |
-| dns | junos-dns-udp |
-| ssh | junos-ssh |
-| ftp | junos-ftp |
-| smtp | junos-smtp |
-| ntp | junos-ntp |
-| snmp | junos-snmp |
-| syslog | junos-syslog |
-| ms-rdp | junos-rdp |
-| ping | junos-ping |
-| mysql | junos-mysql |
-| ms-sql-db | junos-ms-sql |
-| imap | junos-imap |
-| pop3 | junos-pop3 |
-| ldap | junos-ldap |
+For each `<application><member>` in a policy:
 
-If no mapping exists, preserve the original name and add a warning.
+1. Preserve the raw PAN-OS name in the policy's `applications` array
+   (e.g. `applications: ["web-browsing","ssl"]`).
+2. Resolve each name to a vendor-neutral canonical entry in the `apps` array using the
+   PAN-OS → canonical table in `SKILL.md` (§16), e.g.
+   `{ vendor_name: "ssl", canonical: "https", confidence: 1.0, category: "web" }`.
+3. If no canonical mapping exists, preserve the raw `vendor_name`, set `confidence: 0.0`,
+   and add a warning. Do not emit any target-vendor application name here.
 
 ## Profile Group Resolution
 
@@ -103,10 +93,22 @@ When `<source-user>` contains values other than `any`:
 ## Panorama Pre/Post Rulebase
 
 Panorama pushes rules in two categories:
-- `<pre-rulebase>` — evaluated first, before device-local rules
-- `<post-rulebase>` — evaluated last, after device-local rules
+- `<pre-rulebase>` — evaluated before device-local rules
+- `<post-rulebase>` — evaluated after device-local rules
 
-Order: pre-rulebase → local rulebase → post-rulebase
+**Full Panorama evaluation order (top to bottom):**
+
+`shared` → device-group `pre-rulebase` → local/vsys `rulebase` → device-group `post-rulebase`
+
+Notes:
+- Within the device-group dimension, nested device-groups inherit from their ancestors:
+  a parent device-group's pre-rules evaluate before a child's pre-rules, and a parent's
+  post-rules evaluate after a child's post-rules. Shared sits above all device-groups.
+- Encode the merged, flattened evaluation order using `_rule_index` (sequential across all
+  scopes in the order above).
+- The schema only defines `_rule_index` and `_vsys` for PAN-OS context — there is no
+  device-group / pre-vs-post origin field. Capture that origin (which device-group, and
+  pre- vs post-rulebase) in `metadata.warnings` or `residual_raw`; do not invent a schema field.
 
 ## Implicit Rules
 

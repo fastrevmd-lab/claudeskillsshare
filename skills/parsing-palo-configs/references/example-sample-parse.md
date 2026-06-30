@@ -149,7 +149,8 @@
 **Policy 1: allow-outbound-web** (rule_index: 1)
 - Zones: trust → untrust
 - Source: internal-net → Destination: any
-- Applications: web-browsing, ssl (→ junos-http, junos-https)
+- Applications (raw): web-browsing, ssl
+- Apps (canonical): `{vendor_name: "web-browsing", canonical: "http", confidence: 1.0, category: "web"}`, `{vendor_name: "ssl", canonical: "https", confidence: 1.0, category: "web"}`
 - Services: application-default
 - Action: allow | Log: session-end
 - Profile group: best-practice
@@ -157,18 +158,20 @@
 **Policy 2: allow-inbound-https** (rule_index: 2)
 - Zones: untrust → dmz
 - Source: any → Destination: web-srv
-- Applications: ssl (→ junos-https)
+- Applications (raw): ssl
+- Apps (canonical): `{vendor_name: "ssl", canonical: "https", confidence: 1.0, category: "web"}`
 - Services: application-default
 - Action: allow | Log: session-start, session-end
-- Profiles: virus=default, vulnerability=strict
+- Security profiles (PAN-OS → schema key): virus → `antivirus`=default, vulnerability → `idp`=strict
 
 **Policy 3: block-crypto** (rule_index: 3)
 - Zones: any → any
 - Source: any → Destination: any
-- Applications: bitcoin, mining
+- Applications (raw): bitcoin, mining
+- Apps (canonical): `{vendor_name: "bitcoin", canonical: null, confidence: 0.0}`, `{vendor_name: "mining", canonical: null, confidence: 0.0}`
 - Services: any
 - Action: deny | Log: session-end
-- Warning: "Applications 'bitcoin', 'mining' have no Junos predefined equivalent"
+- Warning: "Applications 'bitcoin', 'mining' have no canonical mapping — preserved as raw vendor_name with confidence 0.0"
 
 **Policy 4: Implicit: Intra-zone Allow (trust)** (rule_index: 4, _implicit: true)
 - Zones: trust → trust | Action: allow
@@ -191,4 +194,4 @@
 - **Unused object:** `partner-api` is not referenced by any policy
 - **Unused service:** `svc-8443` is not referenced by any policy
 - **Unused group:** `dmz-servers` is not referenced by any policy
-- **Unmapped applications:** `bitcoin`, `mining` — need manual Junos application definitions
+- **Unmapped applications:** `bitcoin`, `mining` — no canonical equivalent; preserved as raw `vendor_name` with `confidence: 0.0` for review during conversion

@@ -158,7 +158,7 @@ For each rule extract:
 - **applications** — `<application><member>` list
 - **services** — `<service><member>` list (often "application-default")
 - **action** — `<action>` child element name: allow, deny, drop, reset-client, reset-server, reset-both
-  Map `drop` to `deny` with info warning (silent deny → deny since some targets don't distinguish)
+  Preserve `drop` as `action: "drop"` (distinct from `deny`), consistent with `references/parsing-patterns.md` and the schema. Do not collapse drop into deny. Add a conversion warning only for target platforms that cannot distinguish a silent drop from an explicit deny.
 - **log_start** — `<log-start>yes</log-start>`
 - **log_end** — `<log-end>yes</log-end>`
 - **disabled** — `<disabled>yes</disabled>`
@@ -169,16 +169,17 @@ For each rule extract:
   - Warn if non-"any" values found: User-ID has no direct equivalent on most platforms
 - **url_categories** — `<category><member>` list
 
-**Security profiles** — check `<profile-setting>`:
+**Security profiles** — check `<profile-setting>`. Map PAN-OS profile names to the
+`security_profiles` schema keys (left = PAN-OS XML element, right = schema key):
 - `<group><member>` → profile_group name, then resolve from profile-group definitions
 - `<profiles>` → individual profiles:
-  - `<virus><member>` → antivirus
-  - `<spyware><member>` → anti-spyware
-  - `<vulnerability><member>` → IPS/IDP
-  - `<url-filtering><member>` → URL filtering
-  - `<file-blocking><member>` → file blocking
-  - `<wildfire-analysis><member>` → WildFire
-  - `<data-filtering><member>` → DLP
+  - `<virus><member>` → `antivirus`
+  - `<spyware><member>` → `anti-spyware`
+  - `<vulnerability><member>` → `idp` (PAN-OS calls this Vulnerability Protection / IPS; the schema key is `idp`)
+  - `<url-filtering><member>` → `url-filtering`
+  - `<file-blocking><member>` → `file-blocking`
+  - `<wildfire-analysis><member>` → `wildfire`
+  - `<data-filtering><member>` → `dlp`
 
 ### 9. NAT Rules
 Path: `rulebase.nat.rules.entry[]`
@@ -270,8 +271,10 @@ PAN-OS has the richest L7 application model of any firewall vendor. Security pol
    to the `services` array (PAN-OS sometimes places port-based matches in the application field)
 2. **Application group check:** If the name matches an `application-group.entry[]` → add to policy's
    `app_groups` array
-3. **Custom application check:** If the name matches a `application.entry[]` (custom app) → extract
-   its default port definition, resolve protocol/port to a service match
+3. **Custom application check:** If the name matches a `application.entry[]` (custom app) → keep it
+   as an L7 application reference under `applications`/`apps`. Capture its `<default><port>` definition
+   as app metadata / a conversion hint (e.g. `default_port`), but do NOT replace the application with a
+   service object — a custom App-ID remains an L7 application.
 4. **Cross-vendor canonical resolution:** Resolve through the app mapping table
 
 **PAN-OS application names to canonical:**
@@ -314,8 +317,11 @@ each resolved app's default port into explicit service matches.
 `{ vendor_name: "ssl", canonical: "https", confidence: 1.0, category: "web" }`
 
 **Custom applications** (`application.entry[]`): Extract the `<default><port><member>` list.
-Format is `tcp/80,443` or `udp/53` — parse protocol and port range, create a service object,
-and add to the policy's `services` array. Set `confidence: 0.9` since custom apps may not have
+Format is `tcp/80,443` or `udp/53` — parse protocol and port range and attach it as app metadata
+(e.g. a `default_port` field / conversion hint) on the custom app's entry under `applications`/`apps`.
+Keep the custom app as an L7 application reference; do NOT create a service object or move it into the
+policy's `services` array. Only decompose the default port into explicit service matches during target
+conversion when the target platform requires it. Set `confidence: 0.9` since custom apps may not have
 an exact canonical equivalent.
 
 **Unresolvable apps:** PAN-OS has 3000+ built-in application signatures. Many are vendor-specific
@@ -366,7 +372,7 @@ Before returning a parse, run these common quality gates and include the results
 2. **Schema conformance** — emit the vendor-neutral JSON sections defined in `references/intermediate-schema.md`; use empty arrays/objects for absent sections rather than omitting expected top-level keys.
 3. **Object counts** — summarize counts for zones, interfaces, address objects/groups, service/application objects/groups, policies, NAT rules, routes, VPNs, HA, admin users, and residual blocks.
 4. **Reference resolution** — list unresolved object, service/application, zone/interface, profile, route, VPN, and NAT references with source rule/context where possible.
-5. **Ordering preservation** — preserve security policy order, NAT order, route order when relevant, and inherited/pre/post/global ordering metadata with `_rule_index` or a vendor-specific context field.
+5. **Ordering preservation** — preserve security policy order, NAT order, and route order when relevant. For Panorama, encode the full merged evaluation order (`shared` → device-group `pre-rulebase` → local/vsys `rulebase` → device-group `post-rulebase`, with nested device-group inheritance) using `_rule_index`. The schema defines only `_rule_index` and `_vsys` for PAN-OS context, so record device-group / pre-vs-post origin in `metadata.warnings` or `residual_raw` rather than inventing a context field.
 6. **State preservation** — preserve disabled/inactive objects and rules, comments/descriptions, tags, schedules/time-ranges, negation flags, logging settings, and profile attachments.
 7. **Residual capture** — put unsupported or ambiguous source lines/blocks into `residual_raw` with enough context for manual review. Do not silently drop unknown syntax.
 8. **Warnings and assumptions** — populate `metadata.warnings` with parser limitations, partial-input assumptions, ambiguous conversions, and version-specific caveats.
