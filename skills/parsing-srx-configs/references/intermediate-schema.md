@@ -450,12 +450,17 @@ Valid `source_vendor` values: `"srx"`, `"panos"`, `"fortigate"`, `"cisco_asa"`, 
   "control_plane_protection": {
     "re_filter_present": true,
     "applied_to": ["lo0.0"]
+  },
+  "multicast_routing": {
+    "present": false,
+    "protocols": []
   }
 }
 ```
 
 - `ssh.root_login`: allow | deny | deny-password | null. `ssh.rate_limit`/`connection_limit`: ints or null. Generic across vendors (SRX `system services ssh`, Cisco `ssh`/`http` servers, Palo/Forti admin access).
 - `auth`: password policy + login lockout + whether a root credential is set. `control_plane_protection.re_filter_present`: a stateless device/control-plane protection filter is applied (SRX lo0 input filter; Cisco CoPP; Palo/Forti mgmt profile). All optional; absent → the dependent check skips.
+- `multicast_routing.present`: the device has multicast routing configured (SRX `protocols igmp`/`pim`/`mld` or multicast `forwarding-options`; Cisco `ip pim`/`ip igmp`; Palo/Forti multicast). `protocols` lists which families appeared (e.g. `["igmp","pim"]`); full stanza detail goes to `residual_raw`. Presence flag only, not a full multicast parse. All optional; absent → dependent checks skip.
 
 ## Security Services
 

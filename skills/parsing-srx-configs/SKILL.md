@@ -3,7 +3,7 @@ name: parsing-srx-configs
 description: 'Parse and analyze Juniper SRX / Junos firewall configurations. Use this skill when the user pastes, uploads, or references an SRX configuration — either in "set" command format (show configuration | display set) or hierarchical curly-brace format (show configuration). Trigger on keywords: SRX, Junos, Juniper, "set security", "security zones", "address-book", "applications", "security policies", "from-zone", "to-zone", "nat rule-set", "chassis cluster", "logical-systems", "routing-instances". Also trigger when the user asks to convert, audit, summarize, or explain an SRX config.
 
   '
-version: 1.2.0
+version: 1.3.0
 author: Hermes Agent
 license: MIT
 metadata:
@@ -290,6 +290,14 @@ Extract: name, type (daily-except/daily), start-date, stop-date, days of week, t
   - `deactivate` support for disabled OSPF interfaces
   - Normalize area IDs to dotted-decimal
 - **OSPFv3:** `protocols.ospf3` — same structure as OSPF via `ospf3` instances
+- **Multicast (presence flag + residual capture):** flow-mode SRX does not route multicast by default, so most configs have none — but a multicast-related task has nothing to anchor on unless the parser records whether multicast routing exists at all. Mirror the control-plane-protection handling: emit a presence flag and push full detail to `residual_raw`. Detect and flag:
+  - `protocols.igmp` — interfaces, version, static groups, ssm-map
+  - `protocols.pim` — mode (sparse/dense), RP (static / auto-RP / BSR), interfaces
+  - `protocols.mld` — IPv6 multicast equivalent of IGMP
+  - `forwarding-options` multicast stanzas (e.g. `helpers`, multicast scoping)
+  - `routing-options.multicast` / multicast scope policies
+
+  Set `system.multicast_routing { present: true, protocols: [...] }` listing the families seen (e.g. `["igmp","pim"]`); absent → `present: false`. Send the stanza detail to `residual_raw`. This is a presence flag so downstream skills can reason about "is this box doing multicast routing at all" — not a full multicast parse.
 
 ### 10. System Configuration
 Path: `system`
@@ -347,6 +355,8 @@ After parsing all explicit policies, append:
 Present results in the **intermediate schema** format documented in `references/intermediate-schema.md`.
 
 Note: schema sections not yet populated by this pipeline (e.g., `security_profile_objects`, `routing_contexts`) are emitted empty (`[]`/`{}`); any unhandled source constructs are captured in `residual_raw` rather than dropped.
+
+**Full intermediate-schema emission is optional for single live-device work.** The complete JSON schema exists primarily for cross-vendor conversion and multi-config diffing. When interpreting or auditing a *single* live device pulled via NETCONF/MCP for an ops/audit task, it is fine to reason directly from the hierarchical config and skip full schema emission — extract the sections relevant to the question. Emit the full schema when the parse will feed `firewall-config-conversion`, `firewall-config-diff`, or another config for comparison.
 
 
 ## Parser Quality Gates
